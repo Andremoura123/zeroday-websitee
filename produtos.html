@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nossos Produtos - ZeroDay</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <header class="main-header">
+        <a href="{{ url_for('home') }}" class="logo">
+    <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="ZeroDay Icon" class="logo-icon">
+    ZeroDay
+</a>
+        <nav class="main-nav">
+            <ul>
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('produtos') }}">Produtos</a></li>
+                <li><a href="{{ url_for('suporte') }}">Suporte</a></li>
+                {% if usuario_nome %}
+                    <li><a href="{{ url_for('painel') }}" class="btn btn-primary">Painel ({{ usuario_nome.split(' ')[0] }})</a></li>
+                    <li><a href="{{ url_for('logout') }}" class="btn btn-secondary">Sair</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('login') }}" class="btn btn-secondary">Login</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container product-page">
+        <h2 class="fade-in">Escolha seu Produto</h2>
+        <p class="fade-in" style="color: #aaa; margin-bottom: 40px;">Selecione um serviço para iniciar a personalização.</p>
+
+        <div class="product-card fade-in">
+            <div class="product-card-icon"><i class="fas fa-video"></i></div>
+            <div class="product-card-content"><h3>Cinematic</h3><p>Edição de vídeo profissional, trailers, e conteúdo visual de alto impacto para seu projeto ou marca.</p></div>
+            <div class="product-card-action">
+                <a href="{{ url_for('formulario', produto='cinematic') }}" class="btn btn-primary">Personalizar e Solicitar</a>
+            </div>
+        </div>
+
+        <div class="product-card fade-in">
+            <div class="product-card-icon"><i class="fab fa-discord"></i></div>
+            <div class="product-card-content"><h3>Automatização de Discord</h3><p>Criação de bots personalizados, sistemas de ticket, moderação automática e integração de APIs para seu servidor.</p></div>
+            <div class="product-card-action">
+                <a href="{{ url_for('formulario', produto='discord') }}" class="btn btn-primary">Personalizar e Solicitar</a>
+            </div>
+        </div>
+
+        <div class="product-card fade-in">
+            <div class="product-card-icon"><i class="fas fa-palette"></i></div>
+            <div class="product-card-content"><h3>Criação de Imagens / IA</h3><p>Design de identidade visual, logos, banners e arte conceitual gerada por IA para um visual único.</p></div>
+            <div class="product-card-action">
+                <a href="{{ url_for('formulario', produto='ia') }}" class="btn btn-primary">Personalizar e Solicitar</a>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="main-footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4 class="logo">ZeroDay</h4>
+                <p>Projetos digitais com precisão cirúrgica e estética tecnológica.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Links Úteis</h4>
+                <ul>
+                    <li><a href="{{ url_for('home') }}">Home</a></li>
+                    <li><a href="{{ url_for('produtos') }}">Produtos</a></li>
+                    <li><a href="{{ url_for('login') }}">Login / Cadastro</a></li>
+                    <li><a href="{{ url_for('suporte') }}">Suporte (Discord)</a></li>
+                    <li><a href="{{ url_for('admin_login') }}" style="color:#555;">Admin</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="#">Termos de Serviço</a></li>
+                    <li><a href="#">Política de Privacidade</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2025 ZeroDay. Todos os direitos reservados.
+        </div>
+    </footer>
+    
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

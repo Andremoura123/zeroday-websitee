@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administradores - ZeroDay Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin-style.css') }}">
+</head>
+<body>
+
+    <aside class="admin-sidebar">
+        <div class="sidebar-header">ZeroDay_Admin</div>
+        <nav class="sidebar-nav">
+            <ul>
+                <li><a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="{{ url_for('admin_pedidos') }}"><i class="fas fa-boxes"></i> Pedidos</a></li>
+                <li><a href="{{ url_for('admin_pagamentos') }}"><i class="fas fa-credit-card"></i> Pagamentos</a></li>
+                <li><a href="{{ url_for('admin_usuarios') }}"><i class="fas fa-users"></i> Usuários</a></li>
+                <li><a href="{{ url_for('admin_admins') }}"><i class="fas fa-shield-alt"></i> Administradores</a></li>
+                <li><a href="#"><i class="fas fa-cog"></i> Configurações</a></li>
+            </ul>
+        </nav>
+        <div class="sidebar-footer">
+            <nav class="sidebar-nav"><ul><li><a href="{{ url_for('admin_logout') }}" style="color: #FF4136;"><i class="fas fa-sign-out-alt"></i> Logout</a></li></ul></nav>
+        </div>
+    </aside>
+
+    <main class="admin-main-content">
+        <header class="admin-header">
+            <h2>Controle de Administradores</h2>
+            <div class="admin-user">
+                Logado como: **{{ admin_nome }}**
+                <a href="{{ url_for('admin_logout') }}">(Sair)</a>
+            </div>
+        </header>
+
+        <div class="widget-container">
+            <div class="widget-header">
+                <h3>Equipe Autorizada</h3>
+            </div>
+            
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Email</th>
+                        <th>Permissão</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for admin in admins %}
+                    <tr>
+                        <td>{{ admin.id }}</td>
+                        <td>{{ admin.nome }}</td>
+                        <td>{{ admin.email }}</td>
+                        <td><span class="status">{{ admin.permissao }}</span></td>
+                        <td class="action-buttons">
+                            <a href="#" class="btn-small">Redefinir Senha</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+            </table>
+        </div>
+
+    </main>
+</body>
+</html>

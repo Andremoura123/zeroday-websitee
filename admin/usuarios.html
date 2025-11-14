@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuários - ZeroDay Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin-style.css') }}">
+</head>
+<body>
+
+    <aside class="admin-sidebar">
+        <div class="sidebar-header">ZeroDay_Admin</div>
+        <nav class="sidebar-nav">
+            <ul>
+                <li><a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="{{ url_for('admin_pedidos') }}"><i class="fas fa-boxes"></i> Pedidos</a></li>
+                <li><a href="{{ url_for('admin_pagamentos') }}"><i class="fas fa-credit-card"></i> Pagamentos</a></li>
+                <li><a href="{{ url_for('admin_usuarios') }}"><i class="fas fa-users"></i> Usuários</a></li>
+                <li><a href="{{ url_for('admin_admins') }}"><i class="fas fa-shield-alt"></i> Administradores</a></li>
+                <li><a href="#"><i class="fas fa-cog"></i> Configurações</a></li>
+            </ul>
+        </nav>
+        <div class="sidebar-footer">
+            <nav class="sidebar-nav"><ul><li><a href="{{ url_for('admin_logout') }}" style="color: #FF4136;"><i class="fas fa-sign-out-alt"></i> Logout</a></li></ul></nav>
+        </div>
+    </aside>
+
+    <main class="admin-main-content">
+        <header class="admin-header">
+            <h2>Gestão de Usuários</h2>
+            <div class="admin-user">
+                Logado como: **{{ admin_nome }}**
+                <a href="{{ url_for('admin_logout') }}">(Sair)</a>
+            </div>
+        </header>
+
+        <div class="widget-container">
+            <div class="widget-header">
+                <h3>Usuários Cadastrados</h3>
+            </div>
+            
+            {% with messages = get_flashed_messages(category_filter=['success']) %}
+              {% if messages %}
+                {% for message in messages %}
+                  <p style="color: #00FF00; margin-bottom: 15px;">{{ message }}</p>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Email</th>
+                        <th>Usuário Discord</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for usuario in usuarios %}
+                    <tr>
+                        <td>{{ usuario.id }}</td>
+                        <td>{{ usuario.nome }}</td>
+                        <td>{{ usuario.email }}</td>
+                        <td>{{ usuario.discord_user or 'Não informado' }}</td>
+                        <td>
+                            {% if usuario.status == 'Ativo' %}
+                                <span class="status status-active">Ativo</span>
+                            {% else %}
+                                <span class="status status-blocked">Bloqueado</span>
+                            {% endif %}
+                        </td>
+                        
+                        <td class="action-buttons">
+                            {% if usuario.status == 'Ativo' %}
+                                <a href="{{ url_for('admin_suspender_usuario', id=usuario.id) }}" class="btn-small btn-danger">Suspender</a>
+                            {% else %}
+                                <a href="{{ url_for('admin_reativar_usuario', id=usuario.id) }}" class="btn-small">Reativar</a>
+                            {% endif %}
+                            <a href="{{ url_for('admin_reset_user_password', id=usuario.id) }}" class="btn-small" style="background: #0074D9; border-color: #0074D9; color: #fff;">Senha</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #777;">Nenhum usuário cadastrado.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </main>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Cliente - ZeroDay</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tablink");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+    </script>
+</head>
+<body class="painel-body">
+
+    <header class="main-header">
+        <a href="{{ url_for('home') }}" class="logo">
+            <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="ZeroDay Icon" class="logo-icon">
+            ZeroDay
+        </a>
+        <nav class="main-nav">
+            <ul>
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('produtos') }}">Produtos</a></li>
+                <li><a href="{{ url_for('suporte') }}">Suporte</a></li>
+                <li><a href="{{ url_for('logout') }}" class="btn btn-secondary">Sair (Logout)</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <h2 class="fade-in">Área do Cliente</h2>
+        <h3 class="fade-in" style="color: #aaa; font-family: var(--font-secondary); font-weight: 300;">Bem-vindo, {{ usuario_nome }}!</h3>
+
+        <div class="client-dashboard fade-in">
+            <aside class="dashboard-nav">
+                <ul>
+                    <li><a href="#" class="tablink active" onclick="openTab(event, 'Historico')"><i class="fas fa-history"></i> Histórico de Pedidos</a></li>
+                    <li><a href="#" class="tablink" onclick="openTab(event, 'Dados')"><i class="fas fa-user-cog"></i> Dados Cadastrais</a></li>
+                    <li><a href="{{ url_for('suporte') }}"><i class="fas fa-headset"></i> Suporte</a></li>
+                    <li><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
+                </ul>
+            </aside>
+
+            <section class="dashboard-content">
+                
+                <div id="Historico" class="tabcontent">
+                    <h3>Histórico de Pedidos</h3>
+                    <div class="order-history">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID Pedido</th>
+                                    <th>Produto</th>
+                                    <th>Data</th>
+                                    <th>Status do Pedido</th>
+                                    <th>Status do Pagamento</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pedido in pedidos %}
+                                <tr>
+                                    <td>#ZD-{{ pedido.id }}</td>
+                                    <td>{{ pedido.produto_nome }}</td>
+                                    <td>{{ pedido.data_pedido.split(' ')[0] }}</td>
+                                    <td>
+                                        {% if pedido.status_pedido == 'Recebido' %}
+                                            <span class="status status-pending">{{ pedido.status_pedido }}</span>
+                                        {% elif pedido.status_pedido == 'Em Produção' %}
+                                            <span class="status status-production">{{ pedido.status_pedido }}</span>
+                                        {% elif pedido.status_pedido == 'Finalizado' %}
+                                            <span class="status status-completed">{{ pedido.status_pedido }}</span>
+                                        {% else %}
+                                            <span class="status">{{ pedido.status_pedido }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if pedido.status_pagamento == 'Pendente' %}
+                                            <span class="status status-waiting">{{ pedido.status_pagamento }}</span>
+                                        {% else %}
+                                            <span class="status status-completed">{{ pedido.status_pagamento }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" style="text-align: center; color: #777;">Você ainda não fez nenhum pedido.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="Dados" class="tabcontent">
+                    <h3>Dados Cadastrais</h3>
+                    <div class="form-container" style="max-width: 100%; margin: 0; padding: 0;">
+                        <form action="#" method="POST">
+                            <div class="form-group">
+                                <label for="nome">Nome Completo</label>
+                                <input type="text" id="nome" name="nome" value="{{ dados.nome }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" name="email" value="{{ dados.email }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="discord">Usuário Discord</label>
+                                <input type="text" id="discord" name="discord" value="{{ dados.discord_user or '' }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="senha_nova">Nova Senha (deixe em branco para não alterar)</label>
+                                <input type="password" id="senha_nova" name="senha_nova">
+                            </div>
+                            <button type="submit" class="btn btn-primary" disabled>Atualizar (Em breve)</button>
+                        </form>
+                    </div>
+                </div>
+
+            </section>
+        </div>
+    </main>
+
+    <footer class="main-footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4 class="logo">
+                    <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="ZeroDay Icon" class="logo-icon">
+                    ZeroDay
+                </h4>
+                <p>Projetos digitais com precisão cirúrgica e estética tecnológica.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Links Úteis</h4>
+                <ul>
+                    <li><a href="{{ url_for('home') }}">Home</a></li>
+                    <li><a href="{{ url_for('produtos') }}">Produtos</a></li>
+                    <li><a href="{{ url_for('login') }}">Login / Cadastro</a></li>
+                    <li><a href="{{ url_for('suporte') }}">Suporte (Discord)</a></li>
+                    <li><a href="{{ url_for('admin_login') }}" style="color:#555;">Admin</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="#">Termos de Serviço</a></li>
+                    <li><a href="#">Política de Privacidade</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2025 ZeroDay. Todos os direitos reservados.
+        </div>
+    </footer>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Esconde todas as abas
+            var tabcontent = document.getElementsByClassName("tabcontent");
+            for (var i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            
+            // Remove 'active' de todos os links
+            var tablinks = document.getElementsByClassName("tablink");
+            for (var i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            
+            // Mostra a primeira aba ("Historico") e ativa o primeiro link
+            document.getElementById("Historico").style.display = "block";
+            if (tablinks.length > 0) {
+                tablinks[0].className += " active";
+            }
+        });
+    </script>
+</body>
+</html>

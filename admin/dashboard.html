@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - ZeroDay Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin-style.css') }}">
+</head>
+<body>
+
+    <aside class="admin-sidebar">
+        <div class="sidebar-header">ZeroDay_Admin</div>
+        <nav class="sidebar-nav">
+            <ul>
+                <li><a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="{{ url_for('admin_pedidos') }}"><i class="fas fa-boxes"></i> Pedidos</a></li>
+                <li><a href="{{ url_for('admin_pagamentos') }}"><i class="fas fa-credit-card"></i> Pagamentos</a></li>
+                <li><a href="{{ url_for('admin_usuarios') }}"><i class="fas fa-users"></i> Usuários</a></li>
+                <li><a href="{{ url_for('admin_admins') }}"><i class="fas fa-shield-alt"></i> Administradores</a></li>
+                <li><a href="#"><i class="fas fa-cog"></i> Configurações</a></li>
+            </ul>
+        </nav>
+        <div class="sidebar-footer">
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="{{ url_for('admin_logout') }}" style="color: #FF4136;"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                </ul>
+            </nav>
+        </div>
+    </aside>
+
+    <main class="admin-main-content">
+        <header class="admin-header">
+            <h2>Dashboard</h2>
+            <div class="admin-user">
+                Logado como: **{{ admin_nome }}**
+                <a href="{{ url_for('admin_logout') }}">(Sair)</a>
+            </div>
+        </header>
+
+        <section class="dashboard-stats">
+            <div class="stat-card">
+                <div class="stat-card-icon"><i class="fas fa-boxes"></i></div>
+                <h3>{{ stats.total_pedidos }}</h3>
+                <p>Total de Pedidos</p>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                <h3>{{ stats.pedidos_pendentes }}</h3>
+                <p>Pedidos Pendentes</p>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-icon"><i class="fas fa-check-circle"></i></div>
+                <h3>{{ stats.pagos_confirmados }}</h3>
+                <p>Pagamentos Confirmados</p>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-icon"><i class="fas fa-user-plus"></i></div>
+                <h3>{{ stats.novos_usuarios }}</h3>
+                <p>Novos Usuários (Mês)</p>
+            </div>
+        </section>
+
+        <section class="widget-container">
+            <div class="widget-header">
+                <h3>Atividade de Pedidos (Últimos 7 dias)</h3>
+            </div>
+            <div style="height: 300px;">
+                <canvas id="order-chart"></canvas>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const chartLabels = {{ labels_grafico | tojson }};
+        const chartData = {{ data_grafico | tojson }};
+    </script>
+    <script src="{{ url_for('static', filename='admin-script.js') }}"></script>
+</body>
+</html>
