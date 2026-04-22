@@ -621,6 +621,9 @@ def cadastro():
 
 @app.route("/painel")
 def painel():
+    if session.get("is_admin"):
+        return redirect(url_for("admin_dashboard"))
+
     if "usuario_id" not in session:
         return redirect(url_for("login"))
 

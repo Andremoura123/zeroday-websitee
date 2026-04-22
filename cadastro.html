@@ -398,8 +398,13 @@
                 </div>
 
                 <div class="utility-links">
-                    <a href="{{ url_for('login') }}">login</a>
+                    <a href="{{ url_for('login') }}">conta</a>
                     <a href="{{ url_for('painel') }}">painel</a>
+                    {% if session.get('is_admin') %}
+                        <a href="{{ url_for('admin_dashboard') }}">dashboard admin</a>
+                    {% else %}
+                        <a href="{{ url_for('admin_login') }}">admin</a>
+                    {% endif %}
                 </div>
             </div>
         </div>
