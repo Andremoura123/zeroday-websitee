@@ -453,6 +453,9 @@ def get_discord_auth():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    if session.get("is_admin"):
+        return redirect(url_for("admin_dashboard"))
+
     if "usuario_id" in session:
         return redirect(url_for("painel"))
 
@@ -461,12 +464,29 @@ def login():
         senha = request.form.get("senha", "")
 
         db = get_db()
+
+        # tenta login como admin primeiro
+        admin_user = db.execute(
+            "SELECT * FROM administradores WHERE lower(email) = ?",
+            (email,)
+        ).fetchone()
+
+        if admin_user and hash_password(senha) == admin_user["senha_hash"]:
+            session.clear()
+            session["admin_id"] = admin_user["id"]
+            session["usuario_nome"] = admin_user["nome"]
+            session["is_admin"] = True
+            flash("Login administrativo realizado com sucesso.", "success")
+            return redirect(url_for("admin_dashboard"))
+
+        # se não for admin, tenta login de usuário normal
         usuario = db.execute(
             "SELECT * FROM usuarios WHERE lower(email) = ?",
             (email,)
         ).fetchone()
 
         if usuario and usuario["senha_hash"] and hash_password(senha) == usuario["senha_hash"]:
+            session.clear()
             session["usuario_id"] = usuario["id"]
             session["usuario_nome"] = usuario["nome"]
             session["is_admin"] = False
