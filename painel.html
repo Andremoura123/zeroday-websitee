@@ -4,184 +4,540 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel do Cliente - ZeroDay</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <script>
-        function openTab(evt, tabName) {
-            var i, tabcontent, tablinks;
-            tabcontent = document.getElementsByClassName("tabcontent");
-            for (i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].style.display = "none";
-            }
-            tablinks = document.getElementsByClassName("tablink");
-            for (i = 0; i < tablinks.length; i++) {
-                tablinks[i].className = tablinks[i].className.replace(" active", "");
-            }
-            document.getElementById(tabName).style.display = "block";
-            evt.currentTarget.className += " active";
+
+    <style>
+        .panel-page {
+            padding: 24px 0 42px;
         }
-    </script>
+
+        .panel-hero {
+            background: linear-gradient(135deg, #0d171a 0%, #12343a 100%);
+            border: 1px solid rgba(20,184,166,0.14);
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+        }
+
+        .panel-hero-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .panel-hero h1 {
+            font-size: clamp(2rem, 4vw, 3.2rem);
+            line-height: 1;
+            font-weight: 800;
+            color: #fff;
+            margin: 12px 0 10px;
+        }
+
+        .panel-hero p {
+            color: rgba(243,255,253,0.84);
+            max-width: 760px;
+        }
+
+        .panel-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 22px;
+        }
+
+        .panel-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .panel-stat {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            padding: 22px;
+            box-shadow: var(--shadow);
+        }
+
+        .panel-stat i {
+            font-size: 1.35rem;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+
+        .panel-stat strong {
+            display: block;
+            font-size: 2rem;
+            line-height: 1;
+            color: var(--secondary);
+            margin-bottom: 8px;
+        }
+
+        .panel-stat span {
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .panel-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 22px;
+            align-items: start;
+        }
+
+        .panel-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .panel-card-header {
+            padding: 22px 22px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-card-header h2 {
+            font-size: 1.15rem;
+            color: var(--secondary);
+            margin-bottom: 6px;
+        }
+
+        .panel-card-header p {
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .panel-card-body {
+            padding: 22px;
+        }
+
+        .profile-box {
+            display: grid;
+            gap: 16px;
+        }
+
+        .profile-avatar {
+            width: 78px;
+            height: 78px;
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #14b8a6 0%, #0f8f82 100%);
+            color: #041311;
+            font-size: 2rem;
+            font-weight: 800;
+            box-shadow: var(--shadow);
+        }
+
+        .profile-name {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--secondary);
+        }
+
+        .profile-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .profile-item {
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: #0f171b;
+            border: 1px solid var(--border);
+        }
+
+        .profile-item small {
+            display: block;
+            color: var(--muted);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .profile-item span {
+            color: #dffdf8;
+            font-weight: 700;
+            word-break: break-word;
+        }
+
+        .panel-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .panel-tab {
+            min-height: 42px;
+            padding: 0 16px;
+            border-radius: 999px;
+            border: 1px solid rgba(20,184,166,0.18);
+            background: rgba(20,184,166,0.08);
+            color: #dffdf8;
+            font-weight: 700;
+        }
+
+        .panel-section + .panel-section {
+            margin-top: 20px;
+        }
+
+        .list-grid {
+            display: grid;
+            gap: 14px;
+        }
+
+        .list-card {
+            background: #0f171b;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 18px;
+        }
+
+        .list-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .list-top h3 {
+            font-size: 1rem;
+            color: var(--secondary);
+        }
+
+        .list-top small {
+            color: var(--muted);
+        }
+
+        .list-card p {
+            color: var(--muted);
+            line-height: 1.6;
+            margin-bottom: 14px;
+        }
+
+        .list-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            min-height: 32px;
+            padding: 0 12px;
+            border-radius: 999px;
+            font-size: 0.84rem;
+            font-weight: 800;
+            border: 1px solid rgba(20,184,166,0.18);
+            background: rgba(20,184,166,0.12);
+            color: #7ef7ea;
+        }
+
+        .empty-box {
+            padding: 28px 18px;
+            border-radius: 18px;
+            text-align: center;
+            color: var(--muted);
+            background: #0f171b;
+            border: 1px solid var(--border);
+        }
+
+        @media (max-width: 1100px) {
+            .panel-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .panel-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .panel-page {
+                padding-top: 18px;
+            }
+
+            .panel-hero,
+            .panel-card-body,
+            .panel-card-header {
+                padding-left: 18px;
+                padding-right: 18px;
+            }
+
+            .panel-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
-<body class="painel-body">
+<body>
+
+    <div class="top-strip">
+        <div class="container">
+            <strong>ZeroDay</strong> • acompanhe seus pedidos, tickets e informações da sua conta
+        </div>
+    </div>
 
     <header class="main-header">
-        <a href="{{ url_for('home') }}" class="logo">
-            <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="ZeroDay Icon" class="logo-icon">
-            ZeroDay
-        </a>
-        <nav class="main-nav">
-            <ul>
-                <li><a href="{{ url_for('home') }}">Home</a></li>
-                <li><a href="{{ url_for('produtos') }}">Produtos</a></li>
-                <li><a href="{{ url_for('suporte') }}">Suporte</a></li>
-                <li><a href="{{ url_for('logout') }}" class="btn btn-secondary">Sair (Logout)</a></li>
-            </ul>
-        </nav>
+        <div class="container header-main">
+            <a href="{{ url_for('home') }}" class="logo">
+                <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="Logo ZeroDay" class="logo-icon" onerror="this.style.display='none'">
+                ZeroDay
+            </a>
+
+            <div class="search-wrapper">
+                <input type="text" class="search-input" placeholder="buscar no catálogo" id="panelSearchInput">
+                <button class="search-btn" id="panelSearchBtn" aria-label="Pesquisar">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+
+            <div class="header-actions">
+                <a href="{{ url_for('home') }}" class="header-action">
+                    <i class="fas fa-house"></i>
+                </a>
+                <a href="{{ url_for('tickets') }}" class="header-action">
+                    <i class="fas fa-ticket-alt"></i>
+                </a>
+                <a href="{{ url_for('logout') }}" class="header-action user">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <div>
+                        <small>sessão ativa</small>
+                        <span>sair</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="utility-bar">
+            <div class="container">
+                <div class="utility-links">
+                    <a href="{{ url_for('home') }}">home</a>
+                    <a href="{{ url_for('produtos') }}">produtos</a>
+                    <a href="{{ url_for('catalogo') }}">catálogo</a>
+                    <a href="{{ url_for('tickets') }}">tickets</a>
+                    <a href="{{ url_for('suporte') }}">suporte</a>
+                </div>
+
+                <div class="utility-links">
+                    <a href="{{ url_for('pagamento') }}">pagamento</a>
+                    <a href="{{ url_for('formulario', produto='personalizado') }}">novo pedido</a>
+                </div>
+            </div>
+        </div>
     </header>
 
-    <main class="container">
-        <h2 class="fade-in">Área do Cliente</h2>
-        <h3 class="fade-in" style="color: #aaa; font-family: var(--font-secondary); font-weight: 300;">Bem-vindo, {{ usuario_nome }}!</h3>
-
-        <div class="client-dashboard fade-in">
-            <aside class="dashboard-nav">
-                <ul>
-                    <li><a href="#" class="tablink active" onclick="openTab(event, 'Historico')"><i class="fas fa-history"></i> Histórico de Pedidos</a></li>
-                    <li><a href="#" class="tablink" onclick="openTab(event, 'Dados')"><i class="fas fa-user-cog"></i> Dados Cadastrais</a></li>
-                    <li><a href="{{ url_for('suporte') }}"><i class="fas fa-headset"></i> Suporte</a></li>
-                    <li><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Sair</a></li>
-                </ul>
-            </aside>
-
-            <section class="dashboard-content">
-                
-                <div id="Historico" class="tabcontent">
-                    <h3>Histórico de Pedidos</h3>
-                    <div class="order-history">
-                        <table class="admin-table">
-                            <thead>
-                                <tr>
-                                    <th>ID Pedido</th>
-                                    <th>Produto</th>
-                                    <th>Data</th>
-                                    <th>Status do Pedido</th>
-                                    <th>Status do Pagamento</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for pedido in pedidos %}
-                                <tr>
-                                    <td>#ZD-{{ pedido.id }}</td>
-                                    <td>{{ pedido.produto_nome }}</td>
-                                    <td>{{ pedido.data_pedido.split(' ')[0] }}</td>
-                                    <td>
-                                        {% if pedido.status_pedido == 'Recebido' %}
-                                            <span class="status status-pending">{{ pedido.status_pedido }}</span>
-                                        {% elif pedido.status_pedido == 'Em Produção' %}
-                                            <span class="status status-production">{{ pedido.status_pedido }}</span>
-                                        {% elif pedido.status_pedido == 'Finalizado' %}
-                                            <span class="status status-completed">{{ pedido.status_pedido }}</span>
-                                        {% else %}
-                                            <span class="status">{{ pedido.status_pedido }}</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if pedido.status_pagamento == 'Pendente' %}
-                                            <span class="status status-waiting">{{ pedido.status_pagamento }}</span>
-                                        {% else %}
-                                            <span class="status status-completed">{{ pedido.status_pagamento }}</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% else %}
-                                <tr>
-                                    <td colspan="5" style="text-align: center; color: #777;">Você ainda não fez nenhum pedido.</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+    <main class="panel-page">
+        <div class="container">
+            <section class="panel-hero fade-in">
+                <div class="panel-hero-top">
+                    <div>
+                        <span class="badge"><i class="fas fa-user-shield"></i> área do cliente</span>
+                        <h1>olá, {{ usuario.nome if usuario else usuario_nome }}</h1>
+                        <p>acompanhe suas solicitações, visualize seus tickets e mantenha tudo centralizado em um só lugar.</p>
                     </div>
                 </div>
 
-                <div id="Dados" class="tabcontent">
-                    <h3>Dados Cadastrais</h3>
-                    <div class="form-container" style="max-width: 100%; margin: 0; padding: 0;">
-                        <form action="#" method="POST">
-                            <div class="form-group">
-                                <label for="nome">Nome Completo</label>
-                                <input type="text" id="nome" name="nome" value="{{ dados.nome }}" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="email">Email</label>
-                                <input type="email" id="email" name="email" value="{{ dados.email }}" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="discord">Usuário Discord</label>
-                                <input type="text" id="discord" name="discord" value="{{ dados.discord_user or '' }}">
-                            </div>
-                            <div class="form-group">
-                                <label for="senha_nova">Nova Senha (deixe em branco para não alterar)</label>
-                                <input type="password" id="senha_nova" name="senha_nova">
-                            </div>
-                            <button type="submit" class="btn btn-primary" disabled>Atualizar (Em breve)</button>
-                        </form>
-                    </div>
+                <div class="panel-actions">
+                    <a href="{{ url_for('formulario', produto='personalizado') }}" class="btn btn-primary">novo pedido</a>
+                    <a href="{{ url_for('tickets') }}" class="btn btn-secondary">abrir ticket</a>
+                    <a href="{{ url_for('catalogo') }}" class="btn btn-outline">ver catálogo</a>
+                </div>
+            </section>
+
+            <section class="panel-stats fade-in">
+                <div class="panel-stat">
+                    <i class="fas fa-box-open"></i>
+                    <strong>{{ pedidos|length }}</strong>
+                    <span>pedidos registrados</span>
                 </div>
 
+                <div class="panel-stat">
+                    <i class="fas fa-ticket-alt"></i>
+                    <strong>{{ tickets|length }}</strong>
+                    <span>tickets criados</span>
+                </div>
+
+                <div class="panel-stat">
+                    <i class="fas fa-user"></i>
+                    <strong>{{ usuario.status if usuario and usuario.status else 'Ativo' }}</strong>
+                    <span>status da conta</span>
+                </div>
+
+                <div class="panel-stat">
+                    <i class="fas fa-bolt"></i>
+                    <strong>ZeroDay</strong>
+                    <span>área premium ativa</span>
+                </div>
+            </section>
+
+            <section class="panel-grid">
+                <aside class="panel-card fade-in">
+                    <div class="panel-card-header">
+                        <h2>seu perfil</h2>
+                        <p>informações principais da sua conta</p>
+                    </div>
+
+                    <div class="panel-card-body">
+                        <div class="profile-box">
+                            <div class="profile-avatar">
+                                {{ (usuario.nome[0] if usuario and usuario.nome else 'Z')|upper }}
+                            </div>
+
+                            <div class="profile-name">
+                                {{ usuario.nome if usuario else usuario_nome }}
+                            </div>
+
+                            <div class="profile-list">
+                                <div class="profile-item">
+                                    <small>e-mail</small>
+                                    <span>{{ usuario.email if usuario and usuario.email else 'não informado' }}</span>
+                                </div>
+
+                                <div class="profile-item">
+                                    <small>discord</small>
+                                    <span>{{ usuario.discord_user if usuario and usuario.discord_user else 'não informado' }}</span>
+                                </div>
+
+                                <div class="profile-item">
+                                    <small>status</small>
+                                    <span>{{ usuario.status if usuario and usuario.status else 'Ativo' }}</span>
+                                </div>
+
+                                <div class="profile-item">
+                                    <small>cadastro</small>
+                                    <span>{{ usuario.data_cadastro if usuario and usuario.data_cadastro else 'sem registro' }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+
+                <section>
+                    <div class="panel-card fade-in panel-section">
+                        <div class="panel-card-header">
+                            <h2>seus pedidos</h2>
+                            <p>acompanhe o andamento das suas solicitações</p>
+                        </div>
+
+                        <div class="panel-card-body">
+                            <div class="panel-tabs">
+                                <span class="panel-tab">todos os pedidos</span>
+                            </div>
+
+                            {% if pedidos %}
+                                <div class="list-grid">
+                                    {% for pedido in pedidos %}
+                                        <article class="list-card">
+                                            <div class="list-top">
+                                                <div>
+                                                    <h3>{{ pedido.produto_nome }}</h3>
+                                                    <small>{{ pedido.data_pedido }}</small>
+                                                </div>
+
+                                                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                                    <span class="status-badge">{{ pedido.status_pedido }}</span>
+                                                    <span class="status-badge">{{ pedido.status_pagamento }}</span>
+                                                </div>
+                                            </div>
+
+                                            <p>{{ pedido.descricao }}</p>
+
+                                            <div class="list-actions">
+                                                <a href="{{ url_for('pagamento') }}" class="btn btn-outline">pagamento</a>
+                                                <a href="{{ url_for('suporte') }}" class="btn btn-secondary">suporte</a>
+                                            </div>
+                                        </article>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="empty-box">
+                                    você ainda não possui pedidos. comece pelo catálogo ou solicite um projeto personalizado.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="panel-card fade-in panel-section">
+                        <div class="panel-card-header">
+                            <h2>seus tickets</h2>
+                            <p>histórico de atendimentos e chamados</p>
+                        </div>
+
+                        <div class="panel-card-body">
+                            {% if tickets %}
+                                <div class="list-grid">
+                                    {% for ticket in tickets %}
+                                        <article class="list-card">
+                                            <div class="list-top">
+                                                <div>
+                                                    <h3>#{{ ticket.id }} • {{ ticket.assunto }}</h3>
+                                                    <small>{{ ticket.data_criacao }}</small>
+                                                </div>
+
+                                                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                                    <span class="status-badge">{{ ticket.categoria }}</span>
+                                                    <span class="status-badge">{{ ticket.status }}</span>
+                                                </div>
+                                            </div>
+
+                                            <p>{{ ticket.descricao }}</p>
+
+                                            <div class="list-actions">
+                                                <a href="{{ url_for('ver_ticket', ticket_id=ticket.id) }}" class="btn btn-outline">abrir conversa</a>
+                                            </div>
+                                        </article>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="empty-box">
+                                    nenhum ticket encontrado. abra um atendimento para falar com a equipe.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </section>
             </section>
         </div>
     </main>
 
-    <footer class="main-footer">
-        <div class="footer-content">
-            <div class="footer-section">
-                <h4 class="logo">
-                    <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="ZeroDay Icon" class="logo-icon">
-                    ZeroDay
-                </h4>
-                <p>Projetos digitais com precisão cirúrgica e estética tecnológica.</p>
-            </div>
-            <div class="footer-section">
-                <h4>Links Úteis</h4>
-                <ul>
-                    <li><a href="{{ url_for('home') }}">Home</a></li>
-                    <li><a href="{{ url_for('produtos') }}">Produtos</a></li>
-                    <li><a href="{{ url_for('login') }}">Login / Cadastro</a></li>
-                    <li><a href="{{ url_for('suporte') }}">Suporte (Discord)</a></li>
-                    <li><a href="{{ url_for('admin_login') }}" style="color:#555;">Admin</a></li>
-                </ul>
-            </div>
-            <div class="footer-section">
-                <h4>Legal</h4>
-                <ul>
-                    <li><a href="#">Termos de Serviço</a></li>
-                    <li><a href="#">Política de Privacidade</a></li>
-                </ul>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            &copy; 2025 ZeroDay. Todos os direitos reservados.
-        </div>
-    </footer>
-    
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            // Esconde todas as abas
-            var tabcontent = document.getElementsByClassName("tabcontent");
-            for (var i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].style.display = "none";
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('panelSearchInput');
+            const searchBtn = document.getElementById('panelSearchBtn');
+
+            function goSearch() {
+                const value = (searchInput?.value || '').trim();
+                if (!value) {
+                    window.location.href = "{{ url_for('catalogo') }}";
+                    return;
+                }
+                window.location.href = "{{ url_for('catalogo') }}?busca=" + encodeURIComponent(value);
             }
-            
-            // Remove 'active' de todos os links
-            var tablinks = document.getElementsByClassName("tablink");
-            for (var i = 0; i < tablinks.length; i++) {
-                tablinks[i].className = tablinks[i].className.replace(" active", "");
+
+            if (searchBtn) searchBtn.addEventListener('click', goSearch);
+            if (searchInput) {
+                searchInput.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter') goSearch();
+                });
             }
-            
-            // Mostra a primeira aba ("Historico") e ativa o primeiro link
-            document.getElementById("Historico").style.display = "block";
-            if (tablinks.length > 0) {
-                tablinks[0].className += " active";
-            }
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) entry.target.classList.add('visible');
+                });
+            }, { threshold: 0.12 });
+
+            document.querySelectorAll('.fade-in').forEach((el) => observer.observe(el));
         });
     </script>
 </body>

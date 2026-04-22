@@ -3,102 +3,514 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZeroDay - Soluções Digitais</title>
+    <title>ZeroDay - Loja Oficial</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 
+    <div class="top-strip">
+        <div class="container">
+            <strong>ZeroDay</strong> • scripts, bots, sistemas e soluções web com suporte rápido e entrega profissional
+        </div>
+    </div>
+
     <header class="main-header">
-        <a href="{{ url_for('home') }}" class="logo">
-            <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="ZeroDay Icon" class="logo-icon">
-            ZeroDay
-        </a>
-        <nav class="main-nav">
-            <ul>
-                <li><a href="{{ url_for('home') }}">Home</a></li>
-                <li><a href="{{ url_for('produtos') }}">Produtos</a></li>
-                <li><a href="{{ url_for('suporte') }}">Suporte</a></li>
+        <div class="container header-main">
+            <a href="{{ url_for('home') }}" class="logo">
+                <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="Logo ZeroDay" class="logo-icon" onerror="this.style.display='none'">
+                ZeroDay
+            </a>
+
+            <div class="search-wrapper">
+                <input type="text" class="search-input" placeholder="busque aqui seu produto, sistema ou serviço" id="homeSearchInput">
+                <button class="search-btn" id="homeSearchBtn" aria-label="Pesquisar">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+
+            <div class="header-actions">
                 {% if usuario_nome %}
-                    <li><a href="{{ url_for('painel') }}" class="btn btn-primary">Painel ({{ usuario_nome.split(' ')[0] }})</a></li>
-                    <li><a href="{{ url_for('logout') }}" class="btn btn-secondary">Sair</a></li>
+                    <a href="{{ url_for('painel') }}" class="header-action user">
+                        <i class="fas fa-user-circle"></i>
+                        <div>
+                            <small>olá,</small>
+                            <span>{{ usuario_nome.split(' ')[0] }}</span>
+                        </div>
+                    </a>
+                    <a href="{{ url_for('tickets') }}" class="header-action" title="Tickets">
+                        <i class="fas fa-ticket-alt"></i>
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="header-action" title="Sair">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
                 {% else %}
-                    <li><a href="{{ url_for('login') }}" class="btn btn-secondary">Login</a></li>
+                    <a href="{{ url_for('login') }}" class="header-action user">
+                        <i class="fas fa-user-circle"></i>
+                        <div>
+                            <small>olá, faça seu login</small>
+                            <span>ou cadastre-se</span>
+                        </div>
+                    </a>
+                    <a href="{{ url_for('tickets') }}" class="header-action" title="Tickets">
+                        <i class="fas fa-ticket-alt"></i>
+                    </a>
+                    <a href="{{ url_for('suporte') }}" class="header-action" title="Suporte">
+                        <i class="fas fa-headset"></i>
+                    </a>
                 {% endif %}
-            </ul>
-        </nav>
+            </div>
+        </div>
+
+        <div class="utility-bar">
+            <div class="container">
+                <div class="utility-links">
+                    <a href="{{ url_for('suporte') }}"><i class="fas fa-map-marker-alt"></i> atendimento rápido</a>
+                    <a href="{{ url_for('catalogo') }}">catálogo completo</a>
+                    <a href="{{ url_for('produtos') }}">produtos em destaque</a>
+                    <a href="{{ url_for('tickets') }}">acompanhar tickets</a>
+                    <a href="{{ url_for('formulario', produto='personalizado') }}">pedidos personalizados</a>
+                </div>
+
+                <div class="utility-links">
+                    <a href="{{ url_for('login') }}">conta</a>
+                    <a href="{{ url_for('painel') }}">painel</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="department-bar">
+            <div class="container">
+                <a href="{{ url_for('catalogo') }}" class="departments-trigger">
+                    <i class="fas fa-bars"></i>
+                    todos os departamentos
+                </a>
+
+                <div class="department-links">
+                    <a href="{{ url_for('produtos') }}">scripts</a>
+                    <a href="{{ url_for('catalogo') }}">bots</a>
+                    <a href="{{ url_for('formulario', produto='personalizado') }}">sites</a>
+                    <a href="{{ url_for('tickets') }}">tickets</a>
+                    <a href="{{ url_for('suporte') }}">suporte</a>
+                    <a href="{{ url_for('pagamento') }}">pagamentos</a>
+                </div>
+            </div>
+        </div>
     </header>
 
     <main>
         <section class="hero">
-            <h1 class="logo fade-in">ZeroDay</h1>
-            <h2 class="fade-in">Soluções digitais personalizadas na velocidade da tecnologia.</h2>
-            <div class="hero-buttons fade-in">
-                <a href="{{ url_for('produtos') }}" class="btn btn-primary">Escolher Produto</a>
-                <a href="{{ url_for('suporte') }}" class="btn btn-secondary">Contato / Suporte</a>
+            <div class="container">
+                <div class="promo-strip" style="margin-bottom: 18px;">
+                    <div>
+                        <strong>soluções prontas + desenvolvimento sob medida</strong>
+                        <div>parcelamento, suporte, instalação e personalização para seu servidor ou negócio</div>
+                    </div>
+                    <a href="{{ url_for('produtos') }}" class="btn btn-primary">ver produtos</a>
+                </div>
+
+                <div class="hero-banner fade-in">
+                    <div class="hero-content">
+                        <div class="hero-kicker">
+                            <i class="fas fa-bolt"></i>
+                            plataforma oficial ZeroDay
+                        </div>
+
+                        <h1>scripts, bots e sites para transformar seu projeto</h1>
+
+                        <p>
+                            encontre produtos prontos, serviços personalizados e suporte profissional
+                            para RedM, FiveM, Discord e operações web completas.
+                        </p>
+
+                        <div class="hero-buttons">
+                            <a href="{{ url_for('produtos') }}" class="btn btn-primary">comprar agora</a>
+                            <a href="{{ url_for('formulario', produto='personalizado') }}" class="btn btn-secondary">solicitar projeto</a>
+                        </div>
+                    </div>
+
+                    <div class="hero-side">
+                        <div class="hero-mini-card">
+                            <strong>+50</strong>
+                            <span>projetos e entregas realizadas</span>
+                        </div>
+
+                        <div class="hero-mini-card">
+                            <strong>24h</strong>
+                            <span>suporte rápido e acompanhamento</span>
+                        </div>
+
+                        <div class="hero-mini-card">
+                            <strong>100%</strong>
+                            <span>produtos digitais e soluções sob medida</span>
+                        </div>
+
+                        <div class="hero-mini-card">
+                            <strong>venda</strong>
+                            <span>scripts, automações, painéis e sistemas</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quick-actions">
+                    <a href="{{ url_for('produtos') }}" class="quick-card fade-in">
+                        <i class="fas fa-box-open"></i>
+                        <span>produtos em destaque</span>
+                    </a>
+
+                    <a href="{{ url_for('catalogo') }}" class="quick-card fade-in">
+                        <i class="fas fa-th-large"></i>
+                        <span>catálogo completo</span>
+                    </a>
+
+                    <a href="{{ url_for('formulario', produto='personalizado') }}" class="quick-card fade-in">
+                        <i class="fas fa-code"></i>
+                        <span>faça seu projeto</span>
+                    </a>
+
+                    <a href="{{ url_for('tickets') }}" class="quick-card fade-in">
+                        <i class="fas fa-ticket-alt"></i>
+                        <span>abrir ou acompanhar ticket</span>
+                    </a>
+
+                    <a href="{{ url_for('suporte') }}" class="quick-card fade-in">
+                        <i class="fas fa-headset"></i>
+                        <span>central de suporte</span>
+                    </a>
+
+                    <a href="{{ url_for('pagamento') }}" class="quick-card fade-in">
+                        <i class="fas fa-credit-card"></i>
+                        <span>pagamentos</span>
+                    </a>
+
+                    <a href="{{ url_for('painel') }}" class="quick-card fade-in">
+                        <i class="fas fa-user-cog"></i>
+                        <span>painel do cliente</span>
+                    </a>
+
+                    <a href="{{ url_for('login') }}" class="quick-card fade-in">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>login e acesso</span>
+                    </a>
+                </div>
             </div>
         </section>
 
-        <section class="services-highlight container">
-            <h2 class="fade-in">Nossos Principais Serviços</h2>
-            <div class="services-grid">
-                
-                <a href="{{ url_for('produtos') }}" class="service-card fade-in">
-                    <i class="fas fa-video"></i>
-                    <h3>Cinematic</h3>
-                    <p>Produção de vídeos cinematográficos e edição profissional para seus projetos.</p>
-                </a>
+        <section class="section">
+            <div class="container">
+                <h2 class="section-title">categorias para acelerar sua operação</h2>
+                <p class="section-subtitle">
+                    escolha o tipo de solução ideal para o seu servidor, comunidade ou negócio digital
+                </p>
 
-                <a href="{{ url_for('produtos') }}" class="service-card fade-in">
-                    <i class="fab fa-discord"></i>
-                    <h3>Automatização de Discord</h3>
-                    <p>Bots e sistemas personalizados para otimizar e gerenciar sua comunidade.</p>
-                </a>
+                <div class="category-circles">
+                    <a href="{{ url_for('produtos') }}" class="category-circle-item fade-in">
+                        <div class="category-circle">
+                            <i class="fas fa-terminal"></i>
+                        </div>
+                        <div class="category-circle-label">scripts</div>
+                    </a>
 
-                <a href="{{ url_for('produtos') }}" class="service-card fade-in">
-                    <i class="fas fa-palette"></i>
-                    <h3>Criação de Imagens / IA</h3>
-                    <p>Design gráfico e geração de arte com Inteligência Artificial para uma identidade única.</p>
-                </a>
+                    <a href="{{ url_for('catalogo') }}" class="category-circle-item fade-in">
+                        <div class="category-circle">
+                            <i class="fab fa-discord"></i>
+                        </div>
+                        <div class="category-circle-label">bots discord</div>
+                    </a>
+
+                    <a href="{{ url_for('formulario', produto='personalizado') }}" class="category-circle-item fade-in">
+                        <div class="category-circle">
+                            <i class="fas fa-globe"></i>
+                        </div>
+                        <div class="category-circle-label">sites personalizados</div>
+                    </a>
+
+                    <a href="{{ url_for('tickets') }}" class="category-circle-item fade-in">
+                        <div class="category-circle">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="category-circle-label">tickets e suporte</div>
+                    </a>
+
+                    <a href="{{ url_for('catalogo') }}" class="category-circle-item fade-in">
+                        <div class="category-circle">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                        <div class="category-circle-label">sistemas completos</div>
+                    </a>
+
+                    <a href="{{ url_for('suporte') }}" class="category-circle-item fade-in">
+                        <div class="category-circle">
+                            <i class="fas fa-tools"></i>
+                        </div>
+                        <div class="category-circle-label">implantação</div>
+                    </a>
+                </div>
             </div>
         </section>
 
-        <section class="brand-quote container">
-            <h2 class="fade-in">"ZeroDay — Transformando ideias em projetos digitais com precisão cirúrgica e estética tecnológica."</h2>
+        <section class="section">
+            <div class="container">
+                <div class="promo-strip">
+                    <div>
+                        <strong>precisa de algo exclusivo?</strong>
+                        <div>montamos bots, integrações, páginas e sistemas conforme sua necessidade</div>
+                    </div>
+                    <a href="{{ url_for('formulario', produto='personalizado') }}" class="btn btn-primary">pedir orçamento</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <h2 class="section-title">as melhores soluções pra você</h2>
+                <p class="section-subtitle">
+                    uma vitrine moderna para destacar o que a ZeroDay entrega de forma rápida e profissional
+                </p>
+
+                <div class="offer-grid">
+                    <article class="offer-card fade-in">
+                        <div class="offer-media">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="offer-content">
+                            <div class="offer-title">bots para discord e atendimento</div>
+                            <div class="offer-price">sob consulta</div>
+                            <div class="offer-meta">sistemas com tickets, painel, automações e integrações</div>
+                            <div class="offer-action">
+                                <a href="{{ url_for('catalogo') }}" class="btn btn-primary">ver catálogo</a>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="offer-card fade-in">
+                        <div class="offer-media">
+                            <i class="fas fa-window-maximize"></i>
+                        </div>
+                        <div class="offer-content">
+                            <div class="offer-title">sites personalizados</div>
+                            <div class="offer-price">projeto</div>
+                            <div class="offer-meta">layout profissional, páginas sob medida e visual premium</div>
+                            <div class="offer-action">
+                                <a href="{{ url_for('formulario', produto='personalizado') }}" class="btn btn-primary">solicitar</a>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="offer-card fade-in">
+                        <div class="offer-media">
+                            <i class="fas fa-server"></i>
+                        </div>
+                        <div class="offer-content">
+                            <div class="offer-title">scripts para RedM e FiveM</div>
+                            <div class="offer-price">premium</div>
+                            <div class="offer-meta">produtos digitais para otimizar mecânicas e gestão do servidor</div>
+                            <div class="offer-action">
+                                <a href="{{ url_for('produtos') }}" class="btn btn-primary">explorar</a>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="offer-card fade-in">
+                        <div class="offer-media">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div class="offer-content">
+                            <div class="offer-title">suporte, manutenção e ajustes</div>
+                            <div class="offer-price">rápido</div>
+                            <div class="offer-meta">correções, melhorias e acompanhamento técnico especializado</div>
+                            <div class="offer-action">
+                                <a href="{{ url_for('suporte') }}" class="btn btn-primary">falar com suporte</a>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="offer-card fade-in">
+                        <div class="offer-media">
+                            <i class="fas fa-sitemap"></i>
+                        </div>
+                        <div class="offer-content">
+                            <div class="offer-title">painéis administrativos</div>
+                            <div class="offer-price">modular</div>
+                            <div class="offer-meta">controle de pedidos, usuários, aprovações e gestão interna</div>
+                            <div class="offer-action">
+                                <a href="{{ url_for('painel') }}" class="btn btn-primary">acessar painel</a>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="offer-card fade-in">
+                        <div class="offer-media">
+                            <i class="fas fa-plug"></i>
+                        </div>
+                        <div class="offer-content">
+                            <div class="offer-title">integrações e automações</div>
+                            <div class="offer-price">avançado</div>
+                            <div class="offer-meta">discord, banco de dados, pagamentos, formulários e webhooks</div>
+                            <div class="offer-action">
+                                <a href="{{ url_for('formulario', produto='personalizado') }}" class="btn btn-primary">montar solução</a>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="offer-card fade-in">
+                        <div class="offer-media">
+                            <i class="fas fa-life-ring"></i>
+                        </div>
+                        <div class="offer-content">
+                            <div class="offer-title">suporte pós-entrega</div>
+                            <div class="offer-price">ativo</div>
+                            <div class="offer-meta">acompanhe tickets, etapas e evolução do seu pedido</div>
+                            <div class="offer-action">
+                                <a href="{{ url_for('tickets') }}" class="btn btn-primary">acompanhar</a>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="offer-card fade-in">
+                        <div class="offer-media">
+                            <i class="fas fa-crown"></i>
+                        </div>
+                        <div class="offer-content">
+                            <div class="offer-title">soluções premium ZeroDay</div>
+                            <div class="offer-price">top</div>
+                            <div class="offer-meta">foco em performance, design e experiência profissional</div>
+                            <div class="offer-action">
+                                <a href="{{ url_for('home') }}" class="btn btn-primary">saiba mais</a>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <h2 class="section-title">por que escolher a ZeroDay</h2>
+                <p class="section-subtitle">
+                    estrutura profissional para venda, suporte e evolução contínua dos seus produtos
+                </p>
+
+                <div class="card-grid">
+                    <article class="info-card fade-in">
+                        <span class="badge"><i class="fas fa-check-circle"></i> visual profissional</span>
+                        <h3>layout forte e comercial</h3>
+                        <p>
+                            seu site passa uma sensação mais sólida, moderna e confiável, com foco em conversão e vitrine.
+                        </p>
+                        <a href="{{ url_for('catalogo') }}" class="btn btn-outline">ver catálogo</a>
+                    </article>
+
+                    <article class="info-card fade-in">
+                        <span class="badge"><i class="fas fa-bolt"></i> atendimento rápido</span>
+                        <h3>suporte integrado com tickets</h3>
+                        <p>
+                            o cliente consegue comprar, solicitar, acompanhar e resolver pendências em um fluxo muito melhor.
+                        </p>
+                        <a href="{{ url_for('tickets') }}" class="btn btn-outline">abrir ticket</a>
+                    </article>
+
+                    <article class="info-card fade-in">
+                        <span class="badge"><i class="fas fa-code-branch"></i> crescimento</span>
+                        <h3>base pronta para expandir</h3>
+                        <p>
+                            essa estrutura permite evoluir home, catálogo, páginas internas e até a área administrativa depois.
+                        </p>
+                        <a href="{{ url_for('formulario', produto='personalizado') }}" class="btn btn-outline">pedir projeto</a>
+                    </article>
+                </div>
+            </div>
         </section>
     </main>
 
     <footer class="main-footer">
-        <div class="footer-content">
-            <div class="footer-section">
-                <h4 class="logo">
-                    <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="ZeroDay Icon" class="logo-icon">
-                    ZeroDay
-                </h4>
-                <p>Projetos digitais com precisão cirúrgica e estética tecnológica.</p>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a href="{{ url_for('home') }}" class="logo">
+                        <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="Logo ZeroDay" class="logo-icon" onerror="this.style.display='none'">
+                        ZeroDay
+                    </a>
+                    <p>
+                        soluções digitais de alta performance para servidores, comunidades e negócios online.
+                    </p>
+                </div>
+
+                <div class="footer-column">
+                    <h4>navegação</h4>
+                    <ul>
+                        <li><a href="{{ url_for('home') }}">home</a></li>
+                        <li><a href="{{ url_for('produtos') }}">produtos</a></li>
+                        <li><a href="{{ url_for('catalogo') }}">catálogo</a></li>
+                        <li><a href="{{ url_for('suporte') }}">suporte</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-column">
+                    <h4>cliente</h4>
+                    <ul>
+                        <li><a href="{{ url_for('login') }}">login</a></li>
+                        <li><a href="{{ url_for('painel') }}">painel</a></li>
+                        <li><a href="{{ url_for('tickets') }}">tickets</a></li>
+                        <li><a href="{{ url_for('pagamento') }}">pagamento</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-column">
+                    <h4>legal</h4>
+                    <ul>
+                        <li><a href="{{ url_for('termos') }}">termos de serviço</a></li>
+                        <li><a href="{{ url_for('privacidade') }}">política de privacidade</a></li>
+                        <li><a href="{{ url_for('admin_login') }}">acesso admin</a></li>
+                    </ul>
+                </div>
             </div>
-            <div class="footer-section">
-                <h4>Links Úteis</h4>
-                <ul>
-                    <li><a href="{{ url_for('home') }}">Home</a></li>
-                    <li><a href="{{ url_for('produtos') }}">Produtos</a></li>
-                    <li><a href="{{ url_for('login') }}">Login / Cadastro</a></li>
-                    <li><a href="{{ url_for('suporte') }}">Suporte (Discord)</a></li>
-                    <li><a href="{{ url_for('admin_login') }}" style="color:#555;">Admin</a></li>
-                </ul>
+
+            <div class="footer-bottom">
+                <div>&copy; 2025 ZeroDay. Todos os direitos reservados.</div>
+                <div>desenvolvimento, suporte e soluções digitais profissionais</div>
             </div>
-            <div class="footer-section">
-                <h4>Legal</h4>
-                <ul>
-                    <li><a href="#">Termos de Serviço</a></li>
-                    <li><a href="#">Política de Privacidade</a></li>
-                </ul>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            &copy; 2025 ZeroDay. Todos os direitos reservados.
         </div>
     </footer>
-    
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('homeSearchInput');
+            const searchBtn = document.getElementById('homeSearchBtn');
+
+            function goSearch() {
+                const value = searchInput.value.trim();
+                if (!value) {
+                    window.location.href = "{{ url_for('catalogo') }}";
+                    return;
+                }
+                window.location.href = "{{ url_for('catalogo') }}?busca=" + encodeURIComponent(value);
+            }
+
+            if (searchBtn) {
+                searchBtn.addEventListener('click', goSearch);
+            }
+
+            if (searchInput) {
+                searchInput.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter') {
+                        goSearch();
+                    }
+                });
+            }
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, {
+                threshold: 0.12
+            });
+
+            document.querySelectorAll('.fade-in').forEach((el) => observer.observe(el));
+        });
+    </script>
 </body>
 </html>

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Admin - ZeroDay</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .admin-auth-page {
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at top left, rgba(20,184,166,0.10), transparent 32%),
+                radial-gradient(circle at bottom right, rgba(15,143,130,0.10), transparent 30%),
+                var(--bg);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .admin-auth-wrap {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 0;
+        }
+
+        .admin-auth-card {
+            width: min(100%, 520px);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .admin-auth-top {
+            background: linear-gradient(135deg, #0d171a 0%, #12343a 100%);
+            border-bottom: 1px solid rgba(20,184,166,0.14);
+            padding: 28px;
+            color: #fff;
+        }
+
+        .admin-auth-top h1 {
+            font-size: 2rem;
+            line-height: 1;
+            margin: 12px 0 10px;
+        }
+
+        .admin-auth-top p {
+            color: rgba(243,255,253,0.84);
+            line-height: 1.6;
+        }
+
+        .admin-auth-body {
+            padding: 28px;
+        }
+
+        .admin-alert {
+            border-radius: 16px;
+            padding: 14px 16px;
+            margin-bottom: 18px;
+            font-weight: 600;
+            line-height: 1.5;
+            background: rgba(239,68,68,0.12);
+            color: #ff9b9b;
+            border: 1px solid rgba(239,68,68,0.24);
+        }
+
+        .admin-form {
+            display: grid;
+            gap: 16px;
+        }
+
+        .admin-field {
+            display: grid;
+            gap: 8px;
+        }
+
+        .admin-field label {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #dffdf8;
+        }
+
+        .admin-input-wrap {
+            position: relative;
+        }
+
+        .admin-input-wrap i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+        }
+
+        .admin-input {
+            width: 100%;
+            height: 54px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            background: #0f171b;
+            outline: none;
+            padding: 0 16px 0 46px;
+            color: var(--text);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .admin-input:focus {
+            border-color: rgba(20,184,166,0.35);
+            box-shadow: 0 0 0 4px rgba(20,184,166,0.08);
+        }
+
+        .admin-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding-top: 6px;
+        }
+
+        .admin-note {
+            margin-top: 18px;
+            color: var(--muted);
+            font-size: 0.92rem;
+            line-height: 1.6;
+            text-align: center;
+        }
+    </style>
+</head>
+<body class="admin-auth-page">
+
+    <div class="top-strip">
+        <div class="container">
+            <strong>ZeroDay</strong> • acesso administrativo restrito
+        </div>
+    </div>
+
+    <main class="admin-auth-wrap">
+        <div class="container" style="display:flex; justify-content:center;">
+            <section class="admin-auth-card fade-in">
+                <div class="admin-auth-top">
+                    <span class="badge"><i class="fas fa-user-shield"></i> área administrativa</span>
+                    <h1>login admin</h1>
+                    <p>acesso restrito ao gerenciamento interno da plataforma, pedidos, tickets, catálogo e usuários.</p>
+                </div>
+
+                <div class="admin-auth-body">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="admin-alert">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="POST" action="{{ url_for('admin_login_post') }}" class="admin-form">
+                        <div class="admin-field">
+                            <label for="email">e-mail administrativo</label>
+                            <div class="admin-input-wrap">
+                                <i class="fas fa-envelope"></i>
+                                <input type="email" id="email" name="email" class="admin-input" placeholder="admin@zeroday.com" required>
+                            </div>
+                        </div>
+
+                        <div class="admin-field">
+                            <label for="senha">senha</label>
+                            <div class="admin-input-wrap">
+                                <i class="fas fa-key"></i>
+                                <input type="password" id="senha" name="senha" class="admin-input" placeholder="digite sua senha" required>
+                            </div>
+                        </div>
+
+                        <div class="admin-actions">
+                            <button type="submit" class="btn btn-primary">entrar no painel</button>
+                            <a href="{{ url_for('home') }}" class="btn btn-secondary">voltar ao site</a>
+                        </div>
+                    </form>
+
+                    <div class="admin-note">
+                        este ambiente é restrito a administradores autorizados.
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) entry.target.classList.add('visible');
+                });
+            }, { threshold: 0.12 });
+
+            document.querySelectorAll('.fade-in').forEach((el) => observer.observe(el));
+        });
+    </script>
+</body>
+</html>

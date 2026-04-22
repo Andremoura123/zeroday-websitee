@@ -4,81 +4,367 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pagamento - ZeroDay</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .payment-page {
+            padding: 24px 0 42px;
+        }
+
+        .payment-hero {
+            background: linear-gradient(135deg, #0d171a 0%, #12343a 100%);
+            border: 1px solid rgba(20,184,166,0.14);
+            border-radius: 24px;
+            padding: 34px;
+            color: #fff;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+        }
+
+        .payment-hero h1 {
+            font-size: clamp(2rem, 4vw, 3.2rem);
+            line-height: 1;
+            font-weight: 800;
+            margin: 12px 0;
+        }
+
+        .payment-hero p {
+            max-width: 760px;
+            color: rgba(243,255,253,0.86);
+        }
+
+        .payment-layout {
+            display: grid;
+            grid-template-columns: 1fr 420px;
+            gap: 22px;
+            align-items: start;
+        }
+
+        .payment-card,
+        .payment-side {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .payment-card-header {
+            padding: 24px 24px 18px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .payment-card-header h2 {
+            color: var(--secondary);
+            margin-bottom: 8px;
+        }
+
+        .payment-card-header p {
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .payment-card-body {
+            padding: 24px;
+        }
+
+        .payment-methods {
+            display: grid;
+            gap: 16px;
+        }
+
+        .payment-method {
+            background: #0f171b;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 20px;
+        }
+
+        .payment-method-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .payment-method-top h3 {
+            color: var(--secondary);
+            font-size: 1.05rem;
+        }
+
+        .payment-method p {
+            color: var(--muted);
+            line-height: 1.6;
+            margin-bottom: 14px;
+        }
+
+        .payment-code {
+            background: #091013;
+            border: 1px solid rgba(20,184,166,0.16);
+            border-radius: 16px;
+            padding: 14px;
+            color: #dffdf8;
+            font-family: monospace;
+            word-break: break-all;
+            margin-bottom: 12px;
+        }
+
+        .payment-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .payment-side {
+            padding: 24px;
+        }
+
+        .payment-side h2 {
+            color: var(--secondary);
+            margin-bottom: 10px;
+        }
+
+        .payment-side p {
+            color: var(--muted);
+            line-height: 1.7;
+            margin-bottom: 16px;
+        }
+
+        .payment-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .payment-item {
+            background: #0f171b;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 14px 16px;
+        }
+
+        .payment-item strong {
+            display: block;
+            color: #dffdf8;
+            margin-bottom: 6px;
+        }
+
+        .payment-item span {
+            color: var(--muted);
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .payment-alert {
+            margin-top: 18px;
+            padding: 16px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, #0d171a 0%, #12343a 100%);
+            border: 1px solid rgba(20,184,166,0.16);
+        }
+
+        .payment-alert strong {
+            display: block;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .payment-alert span {
+            color: rgba(243,255,253,0.84);
+            line-height: 1.6;
+        }
+
+        @media (max-width: 1100px) {
+            .payment-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .payment-hero,
+            .payment-card-header,
+            .payment-card-body,
+            .payment-side {
+                padding-left: 18px;
+                padding-right: 18px;
+            }
+        }
+    </style>
 </head>
 <body>
 
+    <div class="top-strip">
+        <div class="container">
+            <strong>ZeroDay</strong> • finalize seu pagamento e continue acompanhando tudo pelo painel
+        </div>
+    </div>
+
     <header class="main-header">
-        <a href="{{ url_for('home') }}" class="logo">
-            <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="ZeroDay Icon" class="logo-icon">
-            ZeroDay
-        </a>
-        <nav class="main-nav">
-            <ul>
-                <li><a href="{{ url_for('home') }}">Home</a></li>
-                <li><a href="{{ url_for('produtos') }}">Produtos</a></li>
-                <li><a href="{{ url_for('suporte') }}">Suporte</a></li>
-                {% if usuario_nome %}
-                    <li><a href="{{ url_for('logout') }}" class="btn btn-secondary">Sair</a></li>
-                {% endif %}
-            </ul>
-        </nav>
+        <div class="container header-main">
+            <a href="{{ url_for('home') }}" class="logo">
+                <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="Logo ZeroDay" class="logo-icon" onerror="this.style.display='none'">
+                ZeroDay
+            </a>
+
+            <div class="search-wrapper">
+                <input type="text" class="search-input" placeholder="buscar no catálogo" id="paymentSearchInput">
+                <button class="search-btn" id="paymentSearchBtn" aria-label="Pesquisar">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+
+            <div class="header-actions">
+                <a href="{{ url_for('painel') }}" class="header-action">
+                    <i class="fas fa-user-cog"></i>
+                </a>
+                <a href="{{ url_for('tickets') }}" class="header-action">
+                    <i class="fas fa-ticket-alt"></i>
+                </a>
+                <a href="{{ url_for('suporte') }}" class="header-action user">
+                    <i class="fas fa-headset"></i>
+                    <div>
+                        <small>precisa de ajuda?</small>
+                        <span>suporte</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="utility-bar">
+            <div class="container">
+                <div class="utility-links">
+                    <a href="{{ url_for('home') }}">home</a>
+                    <a href="{{ url_for('produtos') }}">produtos</a>
+                    <a href="{{ url_for('catalogo') }}">catálogo</a>
+                    <a href="{{ url_for('tickets') }}">tickets</a>
+                    <a href="{{ url_for('suporte') }}">suporte</a>
+                </div>
+
+                <div class="utility-links">
+                    <a href="{{ url_for('painel') }}">painel</a>
+                    <a href="{{ url_for('formulario', produto='personalizado') }}">novo pedido</a>
+                </div>
+            </div>
+        </div>
     </header>
 
-    <main class="container">
-        <div class="payment-container fade-in">
-            <h2>Pagamento (Sinal de 50%)</h2>
-            <p style="color: #aaa; margin-bottom: 30px;">Para iniciar seu projeto, é necessário um pagamento inicial. O valor restante será cobrado na entrega.</p>
-            
-            <h3 style="color: var(--color-secondary-gold);">Valor: (Será definido)</h3>
+    <main class="payment-page">
+        <div class="container">
+            <section class="payment-hero fade-in">
+                <span class="badge"><i class="fas fa-credit-card"></i> etapa de pagamento</span>
+                <h1>finalize com segurança</h1>
+                <p>use um dos métodos abaixo para concluir sua etapa de pagamento. depois disso, acompanhe a liberação e o andamento pelo seu painel ou suporte.</p>
+            </section>
 
-            <h3>1. Pagar com QR Code</h3>
-            <div class="qr-code-placeholder" style="background: none; border: none;">
-                <img src="{{ url_for('static', filename='images/qrcode-pix.png') }}" alt="QR Code PIX" style="width: 250px; height: 250px; border: 5px solid var(--color-primary-gold);">
+            <div class="payment-layout">
+                <section class="payment-card fade-in">
+                    <div class="payment-card-header">
+                        <h2>métodos disponíveis</h2>
+                        <p>escolha a forma mais conveniente e, após pagar, envie o comprovante se necessário pelo ticket ou suporte.</p>
+                    </div>
+
+                    <div class="payment-card-body">
+                        <div class="payment-methods">
+                            <article class="payment-method">
+                                <div class="payment-method-top">
+                                    <h3>PIX</h3>
+                                    <span class="badge">instantâneo</span>
+                                </div>
+                                <p>realize o pagamento usando a chave abaixo. em alguns casos, a liberação pode depender da confirmação manual.</p>
+                                <div class="payment-code">sua-chave-pix-aqui@exemplo.com</div>
+                                <div class="payment-actions">
+                                    <a href="{{ url_for('tickets') }}" class="btn btn-primary">enviar comprovante</a>
+                                    <a href="{{ url_for('suporte') }}" class="btn btn-secondary">tirar dúvidas</a>
+                                </div>
+                            </article>
+
+                            <article class="payment-method">
+                                <div class="payment-method-top">
+                                    <h3>transferência</h3>
+                                    <span class="badge">manual</span>
+                                </div>
+                                <p>caso utilize transferência bancária, envie os dados e o comprovante para validação do pagamento.</p>
+                                <div class="payment-code">solicite os dados bancários no suporte</div>
+                                <div class="payment-actions">
+                                    <a href="{{ url_for('suporte') }}" class="btn btn-primary">solicitar dados</a>
+                                </div>
+                            </article>
+
+                            <article class="payment-method">
+                                <div class="payment-method-top">
+                                    <h3>atendimento personalizado</h3>
+                                    <span class="badge">assistido</span>
+                                </div>
+                                <p>para pagamentos diferenciados, parcelamento externo ou negociação específica, fale direto com a equipe.</p>
+                                <div class="payment-actions">
+                                    <a href="{{ url_for('suporte') }}" class="btn btn-primary">falar com suporte</a>
+                                    <a href="{{ url_for('painel') }}" class="btn btn-outline">ver painel</a>
+                                </div>
+                            </article>
+                        </div>
+                    </div>
+                </section>
+
+                <aside class="payment-side fade-in">
+                    <h2>orientações</h2>
+                    <p>para evitar atrasos, sempre confirme qual pedido está sendo pago e, quando necessário, envie o comprovante com clareza.</p>
+
+                    <div class="payment-list">
+                        <div class="payment-item">
+                            <strong>identifique o pedido</strong>
+                            <span>informe produto, serviço ou contexto relacionado ao pagamento realizado.</span>
+                        </div>
+
+                        <div class="payment-item">
+                            <strong>envie comprovante</strong>
+                            <span>isso ajuda a agilizar a validação quando a confirmação não é automática.</span>
+                        </div>
+
+                        <div class="payment-item">
+                            <strong>acompanhe pelo painel</strong>
+                            <span>status de pagamento e andamento podem ser vistos pela sua área do cliente.</span>
+                        </div>
+                    </div>
+
+                    <div class="payment-alert">
+                        <strong>dica ZeroDay</strong>
+                        <span>se tiver qualquer dúvida antes de pagar, fale com o suporte para evitar erros na identificação do seu pedido.</span>
+                    </div>
+                </aside>
             </div>
-
-            <h3>2. Pagar com Chave Aleatória</h3>
-            <div class="pix-key">
-                3d99a93c-4200-4ab4-84cf-a69d0c8107e7
-            </div>
-
-            <a href="{{ url_for('painel') }}" id="btn-payment-done" class="btn btn-primary">Já Realizei o Pagamento</a>
-            
         </div>
     </main>
 
-    <footer class="main-footer">
-        <div class="footer-content">
-            <div class="footer-section">
-                <h4 class="logo">
-                    <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="ZeroDay Icon" class="logo-icon">
-                    ZeroDay
-                </h4>
-                <p>Projetos digitais com precisão cirúrgica e estética tecnológica.</p>
-            </div>
-            <div class="footer-section">
-                <h4>Links Úteis</h4>
-                <ul>
-                    <li><a href="{{ url_for('home') }}">Home</a></li>
-                    <li><a href="{{ url_for('produtos') }}">Produtos</a></li>
-                    <li><a href="{{ url_for('login') }}">Login / Cadastro</a></li>
-                    <li><a href="{{ url_for('suporte') }}">Suporte (Discord)</a></li>
-                    <li><a href="{{ url_for('admin_login') }}" style="color:#555;">Admin</a></li>
-                </ul>
-            </div>
-            <div class="footer-section">
-                <h4>Legal</h4>
-                <ul>
-                    <li><a href="#">Termos de Serviço</a></li>
-                    <li><a href="#">Política de Privacidade</a></li>
-                </ul>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            &copy; 2025 ZeroDay. Todos os direitos reservados.
-        </div>
-    </footer>
-    
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('paymentSearchInput');
+            const searchBtn = document.getElementById('paymentSearchBtn');
+
+            function goSearch() {
+                const value = (searchInput?.value || '').trim();
+                if (!value) {
+                    window.location.href = "{{ url_for('catalogo') }}";
+                    return;
+                }
+                window.location.href = "{{ url_for('catalogo') }}?busca=" + encodeURIComponent(value);
+            }
+
+            if (searchBtn) searchBtn.addEventListener('click', goSearch);
+            if (searchInput) {
+                searchInput.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter') goSearch();
+                });
+            }
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) entry.target.classList.add('visible');
+                });
+            }, { threshold: 0.12 });
+
+            document.querySelectorAll('.fade-in').forEach((el) => observer.observe(el));
+        });
+    </script>
 </body>
 </html>

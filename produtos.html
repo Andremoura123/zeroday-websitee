@@ -3,90 +3,562 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nossos Produtos - ZeroDay</title>
+    <title>Produtos - ZeroDay</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .products-page {
+            padding: 24px 0 42px;
+        }
+
+        .products-hero {
+            background: linear-gradient(135deg, #0d171a 0%, #12343a 100%);
+            border-radius: 24px;
+            padding: 34px;
+            color: #fff;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(20,184,166,0.14);
+            margin-bottom: 24px;
+        }
+
+        .products-hero h1 {
+            font-size: clamp(2rem, 4vw, 3.6rem);
+            line-height: 1;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            margin-bottom: 14px;
+        }
+
+        .products-hero p {
+            max-width: 760px;
+            color: rgba(243,255,253,0.9);
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+
+        .products-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-top: 22px;
+        }
+
+        .product-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            min-height: 100%;
+        }
+
+        .product-box:hover {
+            transform: translateY(-4px);
+        }
+
+        .product-top {
+            background: linear-gradient(180deg, #0d171a 0%, #12343a 100%);
+            min-height: 180px;
+            padding: 28px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 14px;
+            color: #fff;
+        }
+
+        .product-top .icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 22px;
+            background: rgba(20,184,166,0.12);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            backdrop-filter: blur(8px);
+        }
+
+        .product-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 34px;
+            padding: 0 12px;
+            border-radius: 999px;
+            background: rgba(20,184,166,0.14);
+            border: 1px solid rgba(20,184,166,0.18);
+            font-size: 0.84rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #7ef7ea;
+        }
+
+        .product-content {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            flex: 1;
+        }
+
+        .product-content h3 {
+            font-size: 1.3rem;
+            line-height: 1.15;
+            font-weight: 800;
+            color: var(--secondary);
+        }
+
+        .product-content p {
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .product-features {
+            display: grid;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .product-features li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            color: #dffdf8;
+            font-weight: 600;
+        }
+
+        .product-features i {
+            color: var(--primary);
+            margin-top: 3px;
+        }
+
+        .product-footer {
+            margin-top: auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding-top: 8px;
+        }
+
+        .products-strip {
+            margin-top: 24px;
+            background: linear-gradient(135deg, #0d171a 0%, #12343a 100%);
+            border-radius: 22px;
+            color: #fff;
+            padding: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(20,184,166,0.14);
+        }
+
+        .products-strip h3 {
+            font-size: 1.35rem;
+            margin-bottom: 6px;
+        }
+
+        .products-strip p {
+            color: rgba(243,255,253,0.88);
+        }
+
+        .products-mini-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .mini-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .mini-card i {
+            font-size: 1.4rem;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+
+        .mini-card h4 {
+            font-size: 1rem;
+            color: var(--secondary);
+            margin-bottom: 8px;
+        }
+
+        .mini-card p {
+            color: var(--muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 1100px) {
+            .products-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .products-mini-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .products-hero {
+                padding: 24px 18px;
+            }
+
+            .products-grid,
+            .products-mini-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .product-top {
+                min-height: 150px;
+                padding: 22px;
+            }
+
+            .product-content {
+                padding: 20px;
+            }
+        }
+    </style>
 </head>
 <body>
 
+    <div class="top-strip">
+        <div class="container">
+            <strong>ZeroDay</strong> • produtos e serviços prontos para acelerar sua operação com visual profissional
+        </div>
+    </div>
+
     <header class="main-header">
-        <a href="{{ url_for('home') }}" class="logo">
-    <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="ZeroDay Icon" class="logo-icon">
-    ZeroDay
-</a>
-        <nav class="main-nav">
-            <ul>
-                <li><a href="{{ url_for('home') }}">Home</a></li>
-                <li><a href="{{ url_for('produtos') }}">Produtos</a></li>
-                <li><a href="{{ url_for('suporte') }}">Suporte</a></li>
+        <div class="container header-main">
+            <a href="{{ url_for('home') }}" class="logo">
+                <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="Logo ZeroDay" class="logo-icon" onerror="this.style.display='none'">
+                ZeroDay
+            </a>
+
+            <div class="search-wrapper">
+                <input type="text" class="search-input" placeholder="buscar solução, serviço ou categoria" id="productsSearchInput">
+                <button class="search-btn" id="productsSearchBtn" aria-label="Pesquisar">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+
+            <div class="header-actions">
                 {% if usuario_nome %}
-                    <li><a href="{{ url_for('painel') }}" class="btn btn-primary">Painel ({{ usuario_nome.split(' ')[0] }})</a></li>
-                    <li><a href="{{ url_for('logout') }}" class="btn btn-secondary">Sair</a></li>
+                    <a href="{{ url_for('painel') }}" class="header-action user">
+                        <i class="fas fa-user-circle"></i>
+                        <div>
+                            <small>olá,</small>
+                            <span>{{ usuario_nome.split(' ')[0] }}</span>
+                        </div>
+                    </a>
+                    <a href="{{ url_for('tickets') }}" class="header-action" title="Tickets">
+                        <i class="fas fa-ticket-alt"></i>
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="header-action" title="Sair">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
                 {% else %}
-                    <li><a href="{{ url_for('login') }}" class="btn btn-secondary">Login</a></li>
+                    <a href="{{ url_for('login') }}" class="header-action user">
+                        <i class="fas fa-user-circle"></i>
+                        <div>
+                            <small>olá, faça seu login</small>
+                            <span>ou cadastre-se</span>
+                        </div>
+                    </a>
+                    <a href="{{ url_for('tickets') }}" class="header-action" title="Tickets">
+                        <i class="fas fa-ticket-alt"></i>
+                    </a>
+                    <a href="{{ url_for('suporte') }}" class="header-action" title="Suporte">
+                        <i class="fas fa-headset"></i>
+                    </a>
                 {% endif %}
-            </ul>
-        </nav>
+            </div>
+        </div>
+
+        <div class="utility-bar">
+            <div class="container">
+                <div class="utility-links">
+                    <a href="{{ url_for('home') }}">home</a>
+                    <a href="{{ url_for('produtos') }}">produtos</a>
+                    <a href="{{ url_for('catalogo') }}">catálogo</a>
+                    <a href="{{ url_for('tickets') }}">tickets</a>
+                    <a href="{{ url_for('suporte') }}">suporte</a>
+                </div>
+
+                <div class="utility-links">
+                    <a href="{{ url_for('pagamento') }}">pagamento</a>
+                    <a href="{{ url_for('painel') }}">painel</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="department-bar">
+            <div class="container">
+                <a href="{{ url_for('catalogo') }}" class="departments-trigger">
+                    <i class="fas fa-bars"></i>
+                    explorar soluções
+                </a>
+
+                <div class="department-links">
+                    <a href="{{ url_for('produtos') }}">pacotes</a>
+                    <a href="{{ url_for('catalogo') }}">itens individuais</a>
+                    <a href="{{ url_for('formulario', produto='personalizado') }}">projeto sob medida</a>
+                    <a href="{{ url_for('tickets') }}">abrir ticket</a>
+                    <a href="{{ url_for('suporte') }}">atendimento</a>
+                </div>
+            </div>
+        </div>
     </header>
 
-    <main class="container product-page">
-        <h2 class="fade-in">Escolha seu Produto</h2>
-        <p class="fade-in" style="color: #aaa; margin-bottom: 40px;">Selecione um serviço para iniciar a personalização.</p>
+    <main class="products-page">
+        <div class="container">
+            <section class="products-hero fade-in">
+                <span class="badge" style="margin-bottom: 16px;">
+                    <i class="fas fa-fire"></i> produtos em destaque
+                </span>
 
-        <div class="product-card fade-in">
-            <div class="product-card-icon"><i class="fas fa-video"></i></div>
-            <div class="product-card-content"><h3>Cinematic</h3><p>Edição de vídeo profissional, trailers, e conteúdo visual de alto impacto para seu projeto ou marca.</p></div>
-            <div class="product-card-action">
-                <a href="{{ url_for('formulario', produto='cinematic') }}" class="btn btn-primary">Personalizar e Solicitar</a>
-            </div>
+                <h1>pacotes profissionais para elevar seu projeto</h1>
+                <p>
+                    escolha a categoria de serviço ideal para começar. você pode contratar uma estrutura pronta,
+                    pedir ajustes ou solicitar uma solução totalmente personalizada.
+                </p>
+
+                <div class="products-actions">
+                    <a href="{{ url_for('catalogo') }}" class="btn btn-primary">ver catálogo completo</a>
+                    <a href="{{ url_for('formulario', produto='personalizado') }}" class="btn btn-secondary">solicitar projeto</a>
+                </div>
+            </section>
+
+            <section class="products-grid">
+                <article class="product-box fade-in">
+                    <div class="product-top">
+                        <div class="icon">
+                            <i class="fas fa-video"></i>
+                        </div>
+                        <div class="product-badge">cinematic</div>
+                    </div>
+
+                    <div class="product-content">
+                        <h3>Pacote Cinematic</h3>
+                        <p>
+                            edição de vídeo, teasers, trailers, chamadas promocionais e material visual
+                            de impacto para divulgar servidor, produto ou marca.
+                        </p>
+
+                        <ul class="product-features">
+                            <li><i class="fas fa-check-circle"></i> trailers e showcases</li>
+                            <li><i class="fas fa-check-circle"></i> conteúdo promocional moderno</li>
+                            <li><i class="fas fa-check-circle"></i> apresentação mais profissional</li>
+                        </ul>
+
+                        <div class="product-footer">
+                            <a href="{{ url_for('formulario', produto='cinematic') }}" class="btn btn-secondary">solicitar pacote</a>
+                            <a href="{{ url_for('suporte') }}" class="btn btn-outline">tirar dúvidas</a>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="product-box fade-in">
+                    <div class="product-top">
+                        <div class="icon">
+                            <i class="fab fa-discord"></i>
+                        </div>
+                        <div class="product-badge">discord</div>
+                    </div>
+
+                    <div class="product-content">
+                        <h3>Pacote de Discord</h3>
+                        <p>
+                            bots personalizados, sistemas de ticket, automações, integração com APIs
+                            e fluxos internos para dar mais organização ao seu servidor.
+                        </p>
+
+                        <ul class="product-features">
+                            <li><i class="fas fa-check-circle"></i> atendimento e tickets</li>
+                            <li><i class="fas fa-check-circle"></i> automações administrativas</li>
+                            <li><i class="fas fa-check-circle"></i> integração com sistemas externos</li>
+                        </ul>
+
+                        <div class="product-footer">
+                            <a href="{{ url_for('formulario', produto='discord') }}" class="btn btn-secondary">solicitar pacote</a>
+                            <a href="{{ url_for('catalogo') }}" class="btn btn-outline">ver mais opções</a>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="product-box fade-in">
+                    <div class="product-top">
+                        <div class="icon">
+                            <i class="fas fa-palette"></i>
+                        </div>
+                        <div class="product-badge">ia / design</div>
+                    </div>
+
+                    <div class="product-content">
+                        <h3>Pacote de Imagens / IA</h3>
+                        <p>
+                            identidade visual, banners, logos, material promocional e recursos criativos
+                            para destacar seu projeto com presença forte.
+                        </p>
+
+                        <ul class="product-features">
+                            <li><i class="fas fa-check-circle"></i> peças visuais profissionais</li>
+                            <li><i class="fas fa-check-circle"></i> apoio criativo para campanhas</li>
+                            <li><i class="fas fa-check-circle"></i> personalização visual sob medida</li>
+                        </ul>
+
+                        <div class="product-footer">
+                            <a href="{{ url_for('formulario', produto='ia') }}" class="btn btn-secondary">solicitar pacote</a>
+                            <a href="{{ url_for('suporte') }}" class="btn btn-outline">falar com equipe</a>
+                        </div>
+                    </div>
+                </article>
+            </section>
+
+            <section class="products-strip fade-in">
+                <div>
+                    <h3>quer algo além dos pacotes?</h3>
+                    <p>montamos sistemas, páginas, integrações e soluções personalizadas conforme sua necessidade.</p>
+                </div>
+
+                <a href="{{ url_for('formulario', produto='personalizado') }}" class="btn btn-primary">pedir orçamento</a>
+            </section>
+
+            <section class="products-mini-grid">
+                <article class="mini-card fade-in">
+                    <i class="fas fa-layer-group"></i>
+                    <h4>catálogo organizado</h4>
+                    <p>visualize itens individuais e categorias para explorar outras possibilidades de entrega.</p>
+                </article>
+
+                <article class="mini-card fade-in">
+                    <i class="fas fa-headset"></i>
+                    <h4>suporte dedicado</h4>
+                    <p>tenha acompanhamento para tirar dúvidas, ajustar escopo e acompanhar o andamento.</p>
+                </article>
+
+                <article class="mini-card fade-in">
+                    <i class="fas fa-credit-card"></i>
+                    <h4>fluxo de pagamento</h4>
+                    <p>estrutura pronta para o cliente sair do pedido e seguir direto para a etapa de pagamento.</p>
+                </article>
+
+                <article class="mini-card fade-in">
+                    <i class="fas fa-rocket"></i>
+                    <h4>base para crescer</h4>
+                    <p>essa nova estrutura deixa o site mais comercial e preparado para expansão futura.</p>
+                </article>
+            </section>
         </div>
-
-        <div class="product-card fade-in">
-            <div class="product-card-icon"><i class="fab fa-discord"></i></div>
-            <div class="product-card-content"><h3>Automatização de Discord</h3><p>Criação de bots personalizados, sistemas de ticket, moderação automática e integração de APIs para seu servidor.</p></div>
-            <div class="product-card-action">
-                <a href="{{ url_for('formulario', produto='discord') }}" class="btn btn-primary">Personalizar e Solicitar</a>
-            </div>
-        </div>
-
-        <div class="product-card fade-in">
-            <div class="product-card-icon"><i class="fas fa-palette"></i></div>
-            <div class="product-card-content"><h3>Criação de Imagens / IA</h3><p>Design de identidade visual, logos, banners e arte conceitual gerada por IA para um visual único.</p></div>
-            <div class="product-card-action">
-                <a href="{{ url_for('formulario', produto='ia') }}" class="btn btn-primary">Personalizar e Solicitar</a>
-            </div>
-        </div>
-
     </main>
 
     <footer class="main-footer">
-        <div class="footer-content">
-            <div class="footer-section">
-                <h4 class="logo">ZeroDay</h4>
-                <p>Projetos digitais com precisão cirúrgica e estética tecnológica.</p>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a href="{{ url_for('home') }}" class="logo">
+                        <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="Logo ZeroDay" class="logo-icon" onerror="this.style.display='none'">
+                        ZeroDay
+                    </a>
+                    <p>
+                        soluções digitais de alta performance para servidores, comunidades e negócios online.
+                    </p>
+                </div>
+
+                <div class="footer-column">
+                    <h4>navegação</h4>
+                    <ul>
+                        <li><a href="{{ url_for('home') }}">home</a></li>
+                        <li><a href="{{ url_for('produtos') }}">produtos</a></li>
+                        <li><a href="{{ url_for('catalogo') }}">catálogo</a></li>
+                        <li><a href="{{ url_for('suporte') }}">suporte</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-column">
+                    <h4>cliente</h4>
+                    <ul>
+                        <li><a href="{{ url_for('login') }}">login</a></li>
+                        <li><a href="{{ url_for('painel') }}">painel</a></li>
+                        <li><a href="{{ url_for('tickets') }}">tickets</a></li>
+                        <li><a href="{{ url_for('pagamento') }}">pagamento</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-column">
+                    <h4>legal</h4>
+                    <ul>
+                        <li><a href="{{ url_for('termos') }}">termos de serviço</a></li>
+                        <li><a href="{{ url_for('privacidade') }}">política de privacidade</a></li>
+                        <li><a href="{{ url_for('admin_login') }}">acesso admin</a></li>
+                    </ul>
+                </div>
             </div>
-            <div class="footer-section">
-                <h4>Links Úteis</h4>
-                <ul>
-                    <li><a href="{{ url_for('home') }}">Home</a></li>
-                    <li><a href="{{ url_for('produtos') }}">Produtos</a></li>
-                    <li><a href="{{ url_for('login') }}">Login / Cadastro</a></li>
-                    <li><a href="{{ url_for('suporte') }}">Suporte (Discord)</a></li>
-                    <li><a href="{{ url_for('admin_login') }}" style="color:#555;">Admin</a></li>
-                </ul>
+
+            <div class="footer-bottom">
+                <div>&copy; 2025 ZeroDay. Todos os direitos reservados.</div>
+                <div>produtos, automações e soluções personalizadas com visual premium</div>
             </div>
-            <div class="footer-section">
-                <h4>Legal</h4>
-                <ul>
-                    <li><a href="#">Termos de Serviço</a></li>
-                    <li><a href="#">Política de Privacidade</a></li>
-                </ul>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            &copy; 2025 ZeroDay. Todos os direitos reservados.
         </div>
     </footer>
-    
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('productsSearchInput');
+            const searchBtn = document.getElementById('productsSearchBtn');
+
+            function goSearch() {
+                const value = (searchInput?.value || '').trim();
+                if (!value) {
+                    window.location.href = "{{ url_for('catalogo') }}";
+                    return;
+                }
+                window.location.href = "{{ url_for('catalogo') }}?busca=" + encodeURIComponent(value);
+            }
+
+            if (searchBtn) {
+                searchBtn.addEventListener('click', goSearch);
+            }
+
+            if (searchInput) {
+                searchInput.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter') {
+                        goSearch();
+                    }
+                });
+            }
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.12 });
+
+            document.querySelectorAll('.fade-in').forEach((el) => observer.observe(el));
+        });
+    </script>
 </body>
 </html>

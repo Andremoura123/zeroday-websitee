@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket #{{ ticket.id }} - ZeroDay</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .chat-page {
+            padding: 24px 0 42px;
+        }
+
+        .chat-layout {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 22px;
+            align-items: start;
+        }
+
+        .chat-side,
+        .chat-main {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .chat-side {
+            padding: 24px;
+        }
+
+        .chat-side h1 {
+            font-size: 1.4rem;
+            color: var(--secondary);
+            margin: 12px 0 10px;
+        }
+
+        .chat-side p {
+            color: var(--muted);
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .chat-meta {
+            display: grid;
+            gap: 12px;
+        }
+
+        .chat-meta-item {
+            background: #0f171b;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 14px 16px;
+        }
+
+        .chat-meta-item small {
+            display: block;
+            color: var(--muted);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .chat-meta-item span {
+            color: #dffdf8;
+            font-weight: 700;
+            word-break: break-word;
+        }
+
+        .chat-main-header {
+            padding: 22px 22px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .chat-main-header h2 {
+            color: var(--secondary);
+            margin-bottom: 8px;
+        }
+
+        .chat-main-header p {
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .chat-messages {
+            padding: 22px;
+            display: grid;
+            gap: 14px;
+            max-height: 520px;
+            overflow-y: auto;
+        }
+
+        .chat-bubble {
+            max-width: 82%;
+            padding: 16px;
+            border-radius: 18px;
+            border: 1px solid var(--border);
+            background: #0f171b;
+        }
+
+        .chat-bubble.admin {
+            margin-left: auto;
+            background: rgba(20,184,166,0.10);
+            border-color: rgba(20,184,166,0.18);
+        }
+
+        .chat-bubble.cliente {
+            margin-right: auto;
+        }
+
+        .chat-bubble-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+
+        .chat-bubble-top strong {
+            color: var(--secondary);
+            font-size: 0.96rem;
+        }
+
+        .chat-bubble-top small {
+            color: var(--muted);
+            font-size: 0.85rem;
+        }
+
+        .chat-bubble p {
+            color: #dffdf8;
+            line-height: 1.65;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .chat-form-wrap {
+            border-top: 1px solid var(--border);
+            padding: 22px;
+        }
+
+        .chat-form {
+            display: grid;
+            gap: 14px;
+        }
+
+        .chat-textarea {
+            width: 100%;
+            min-height: 120px;
+            border-radius: 18px;
+            border: 1px solid var(--border);
+            background: #0f171b;
+            color: var(--text);
+            padding: 16px;
+            resize: vertical;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .chat-textarea:focus {
+            border-color: rgba(20,184,166,0.35);
+            box-shadow: 0 0 0 4px rgba(20,184,166,0.08);
+        }
+
+        .chat-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .chat-empty {
+            padding: 18px;
+            border-radius: 18px;
+            background: #0f171b;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            text-align: center;
+        }
+
+        @media (max-width: 1100px) {
+            .chat-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .chat-side,
+            .chat-main-header,
+            .chat-messages,
+            .chat-form-wrap {
+                padding-left: 18px;
+                padding-right: 18px;
+            }
+
+            .chat-bubble {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-strip">
+        <div class="container">
+            <strong>ZeroDay</strong> • acompanhe seu ticket e responda direto pela conversa
+        </div>
+    </div>
+
+    <header class="main-header">
+        <div class="container header-main">
+            <a href="{{ url_for('home') }}" class="logo">
+                <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="Logo ZeroDay" class="logo-icon" onerror="this.style.display='none'">
+                ZeroDay
+            </a>
+
+            <div class="search-wrapper">
+                <input type="text" class="search-input" placeholder="buscar no catálogo" id="chatSearchInput">
+                <button class="search-btn" id="chatSearchBtn" aria-label="Pesquisar">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+
+            <div class="header-actions">
+                {% if is_admin %}
+                    <a href="{{ url_for('admin_tickets') }}" class="header-action">
+                        <i class="fas fa-shield-halved"></i>
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('painel') }}" class="header-action">
+                        <i class="fas fa-user-cog"></i>
+                    </a>
+                {% endif %}
+                <a href="{{ url_for('tickets') }}" class="header-action">
+                    <i class="fas fa-ticket-alt"></i>
+                </a>
+                <a href="{{ url_for('suporte') }}" class="header-action user">
+                    <i class="fas fa-headset"></i>
+                    <div>
+                        <small>suporte</small>
+                        <span>central</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="utility-bar">
+            <div class="container">
+                <div class="utility-links">
+                    <a href="{{ url_for('home') }}">home</a>
+                    <a href="{{ url_for('produtos') }}">produtos</a>
+                    <a href="{{ url_for('catalogo') }}">catálogo</a>
+                    <a href="{{ url_for('tickets') }}">tickets</a>
+                    <a href="{{ url_for('suporte') }}">suporte</a>
+                </div>
+
+                <div class="utility-links">
+                    {% if is_admin %}
+                        <a href="{{ url_for('admin_tickets') }}">admin tickets</a>
+                    {% else %}
+                        <a href="{{ url_for('painel') }}">painel</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="chat-page">
+        <div class="container">
+            <div class="chat-layout">
+                <aside class="chat-side fade-in">
+                    <span class="badge"><i class="fas fa-comments"></i> conversa do ticket</span>
+                    <h1>#{{ ticket.id }} • {{ ticket.assunto }}</h1>
+                    <p>acompanhe as mensagens e responda por aqui para manter todo o histórico organizado.</p>
+
+                    <div class="chat-meta">
+                        <div class="chat-meta-item">
+                            <small>categoria</small>
+                            <span>{{ ticket.categoria }}</span>
+                        </div>
+
+                        <div class="chat-meta-item">
+                            <small>status</small>
+                            <span>{{ ticket.status }}</span>
+                        </div>
+
+                        <div class="chat-meta-item">
+                            <small>prioridade</small>
+                            <span>{{ ticket.prioridade if ticket.prioridade else 'Normal' }}</span>
+                        </div>
+
+                        <div class="chat-meta-item">
+                            <small>aberto em</small>
+                            <span>{{ ticket.data_criacao }}</span>
+                        </div>
+                    </div>
+                </aside>
+
+                <section class="chat-main fade-in">
+                    <div class="chat-main-header">
+                        <h2>histórico da conversa</h2>
+                        <p>mantenha a comunicação dentro deste ticket para facilitar a análise e o acompanhamento do atendimento.</p>
+                    </div>
+
+                    <div class="chat-messages">
+                        {% if mensagens %}
+                            {% for msg in mensagens %}
+                                <article class="chat-bubble {{ 'admin' if msg.remetente_tipo == 'admin' else 'cliente' }}">
+                                    <div class="chat-bubble-top">
+                                        <strong>{{ msg.remetente_nome }}</strong>
+                                        <small>{{ msg.data_envio }}</small>
+                                    </div>
+                                    <p>{{ msg.mensagem }}</p>
+                                </article>
+                            {% endfor %}
+                        {% else %}
+                            <div class="chat-empty">
+                                ainda não existem mensagens neste ticket.
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="chat-form-wrap">
+                        <form method="POST" action="{{ url_for('enviar_mensagem_ticket', ticket_id=ticket.id) }}" class="chat-form">
+                            <textarea name="mensagem" class="chat-textarea" placeholder="digite sua resposta..." required></textarea>
+
+                            <div class="chat-actions">
+                                <button type="submit" class="btn btn-primary">enviar mensagem</button>
+
+                                {% if is_admin %}
+                                    <a href="{{ url_for('admin_fechar_ticket', ticket_id=ticket.id) }}" class="btn btn-secondary">fechar ticket</a>
+                                {% else %}
+                                    <a href="{{ url_for('painel') }}" class="btn btn-secondary">voltar ao painel</a>
+                                {% endif %}
+                            </div>
+                        </form>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('chatSearchInput');
+            const searchBtn = document.getElementById('chatSearchBtn');
+
+            function goSearch() {
+                const value = (searchInput?.value || '').trim();
+                if (!value) {
+                    window.location.href = "{{ url_for('catalogo') }}";
+                    return;
+                }
+                window.location.href = "{{ url_for('catalogo') }}?busca=" + encodeURIComponent(value);
+            }
+
+            if (searchBtn) searchBtn.addEventListener('click', goSearch);
+            if (searchInput) {
+                searchInput.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter') goSearch();
+                });
+            }
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) entry.target.classList.add('visible');
+                });
+            }, { threshold: 0.12 });
+
+            document.querySelectorAll('.fade-in').forEach((el) => observer.observe(el));
+        });
+    </script>
+</body>
+</html>

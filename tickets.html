@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Suporte - ZeroDay</title>
+    <title>Tickets - ZeroDay</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
     <style>
-        .support-page {
+        .tickets-page {
             padding: 24px 0 42px;
         }
 
-        .support-hero {
+        .tickets-hero {
             background: linear-gradient(135deg, #0d171a 0%, #12343a 100%);
             border: 1px solid rgba(20,184,166,0.14);
             border-radius: 24px;
@@ -22,59 +22,66 @@
             margin-bottom: 24px;
         }
 
-        .support-hero h1 {
-            font-size: clamp(2rem, 4vw, 3.4rem);
+        .tickets-hero h1 {
+            font-size: clamp(2rem, 4vw, 3.3rem);
             line-height: 1;
             font-weight: 800;
             margin: 12px 0;
         }
 
-        .support-hero p {
+        .tickets-hero p {
             max-width: 760px;
             color: rgba(243,255,253,0.86);
         }
 
-        .support-actions {
+        .tickets-actions {
             display: flex;
             flex-wrap: wrap;
             gap: 12px;
             margin-top: 22px;
         }
 
-        .support-grid {
+        .ticket-categories {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 18px;
-            margin-bottom: 22px;
         }
 
-        .support-card {
+        .ticket-card {
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 24px;
             padding: 24px;
             box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            transition: var(--transition);
         }
 
-        .support-card i {
-            font-size: 1.5rem;
+        .ticket-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(20,184,166,0.2);
+        }
+
+        .ticket-card i {
+            font-size: 1.6rem;
             color: var(--primary);
-            margin-bottom: 14px;
         }
 
-        .support-card h3 {
+        .ticket-card h3 {
             color: var(--secondary);
-            font-size: 1.12rem;
-            margin-bottom: 10px;
+            font-size: 1.08rem;
         }
 
-        .support-card p {
+        .ticket-card p {
             color: var(--muted);
             line-height: 1.6;
-            margin-bottom: 16px;
+            flex: 1;
         }
 
-        .support-box {
+        .tickets-info {
+            margin-top: 24px;
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 24px;
@@ -82,24 +89,23 @@
             padding: 26px;
         }
 
-        .support-box h2 {
+        .tickets-info h2 {
             color: var(--secondary);
             margin-bottom: 10px;
         }
 
-        .support-box p {
+        .tickets-info p {
             color: var(--muted);
             line-height: 1.7;
-            margin-bottom: 16px;
         }
 
-        .support-list {
+        .tickets-steps {
             display: grid;
             gap: 12px;
-            margin-top: 14px;
+            margin-top: 18px;
         }
 
-        .support-item {
+        .tickets-step {
             padding: 14px 16px;
             border-radius: 16px;
             background: #0f171b;
@@ -108,9 +114,21 @@
             font-weight: 600;
         }
 
-        @media (max-width: 992px) {
-            .support-grid {
+        @media (max-width: 1100px) {
+            .ticket-categories {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .ticket-categories {
                 grid-template-columns: 1fr;
+            }
+
+            .tickets-hero,
+            .tickets-info {
+                padding-left: 18px;
+                padding-right: 18px;
             }
         }
     </style>
@@ -119,7 +137,7 @@
 
     <div class="top-strip">
         <div class="container">
-            <strong>ZeroDay</strong> • central de suporte e atendimento para clientes e novos pedidos
+            <strong>ZeroDay</strong> • abra e acompanhe seus tickets com atendimento organizado
         </div>
     </div>
 
@@ -131,8 +149,8 @@
             </a>
 
             <div class="search-wrapper">
-                <input type="text" class="search-input" placeholder="buscar no catálogo" id="supportSearchInput">
-                <button class="search-btn" id="supportSearchBtn" aria-label="Pesquisar">
+                <input type="text" class="search-input" placeholder="buscar no catálogo" id="ticketsSearchInput">
+                <button class="search-btn" id="ticketsSearchBtn" aria-label="Pesquisar">
                     <i class="fas fa-search"></i>
                 </button>
             </div>
@@ -141,14 +159,14 @@
                 <a href="{{ url_for('home') }}" class="header-action">
                     <i class="fas fa-house"></i>
                 </a>
-                <a href="{{ url_for('tickets') }}" class="header-action">
-                    <i class="fas fa-ticket-alt"></i>
+                <a href="{{ url_for('painel') }}" class="header-action">
+                    <i class="fas fa-user-cog"></i>
                 </a>
                 <a href="{{ url_for('login') }}" class="header-action user">
                     <i class="fas fa-user-circle"></i>
                     <div>
                         <small>área do cliente</small>
-                        <span>entrar</span>
+                        <span>acessar</span>
                     </div>
                 </a>
             </div>
@@ -165,59 +183,65 @@
                 </div>
 
                 <div class="utility-links">
+                    <a href="{{ url_for('painel') }}">painel</a>
                     <a href="{{ url_for('formulario', produto='personalizado') }}">novo pedido</a>
-                    <a href="{{ url_for('pagamento') }}">pagamento</a>
                 </div>
             </div>
         </div>
     </header>
 
-    <main class="support-page">
+    <main class="tickets-page">
         <div class="container">
-            <section class="support-hero fade-in">
-                <span class="badge"><i class="fas fa-headset"></i> suporte ZeroDay</span>
-                <h1>atendimento rápido, claro e profissional</h1>
-                <p>use nossa central para abrir tickets, solicitar suporte técnico, esclarecer dúvidas sobre produtos e acompanhar demandas em andamento.</p>
+            <section class="tickets-hero fade-in">
+                <span class="badge"><i class="fas fa-ticket-alt"></i> central de tickets</span>
+                <h1>escolha a categoria do seu atendimento</h1>
+                <p>abra o chamado correto para agilizar sua resposta. cada categoria ajuda a organizar melhor sua solicitação e o fluxo interno de atendimento.</p>
 
-                <div class="support-actions">
-                    <a href="{{ url_for('tickets') }}" class="btn btn-primary">abrir ticket</a>
-                    <a href="{{ url_for('formulario', produto='personalizado') }}" class="btn btn-secondary">novo pedido</a>
-                    <a href="{{ url_for('catalogo') }}" class="btn btn-outline">ver catálogo</a>
+                <div class="tickets-actions">
+                    <a href="{{ url_for('painel') }}" class="btn btn-secondary">ver meu painel</a>
+                    <a href="{{ url_for('suporte') }}" class="btn btn-outline">falar com suporte</a>
                 </div>
             </section>
 
-            <section class="support-grid">
-                <article class="support-card fade-in">
-                    <i class="fas fa-ticket-alt"></i>
-                    <h3>tickets organizados</h3>
-                    <p>abra seu chamado e acompanhe tudo por categoria, assunto e andamento dentro da sua área.</p>
-                    <a href="{{ url_for('tickets') }}" class="btn btn-outline">ir para tickets</a>
+            <section class="ticket-categories">
+                <article class="ticket-card fade-in">
+                    <i class="fas fa-life-ring"></i>
+                    <h3>suporte geral</h3>
+                    <p>para dúvidas gerais, orientação de uso, informações sobre funcionamento e auxílio técnico básico.</p>
+                    <a href="{{ url_for('novo_ticket', categoria='Suporte') }}" class="btn btn-primary">abrir ticket</a>
                 </article>
 
-                <article class="support-card fade-in">
-                    <i class="fas fa-code"></i>
-                    <h3>ajustes e personalizações</h3>
-                    <p>solicite modificações, melhorias e soluções sob medida para o seu projeto ou servidor.</p>
-                    <a href="{{ url_for('formulario', produto='personalizado') }}" class="btn btn-outline">solicitar</a>
+                <article class="ticket-card fade-in">
+                    <i class="fas fa-donate"></i>
+                    <h3>doação / pagamento</h3>
+                    <p>use esta categoria para questões sobre pagamentos, comprovantes, liberação e status financeiro.</p>
+                    <a href="{{ url_for('novo_ticket', categoria='Doacao') }}" class="btn btn-primary">abrir ticket</a>
                 </article>
 
-                <article class="support-card fade-in">
-                    <i class="fas fa-user-shield"></i>
-                    <h3>acompanhe pelo painel</h3>
-                    <p>acesse sua conta para ver histórico de pedidos, tickets e status do seu atendimento.</p>
-                    <a href="{{ url_for('painel') }}" class="btn btn-outline">abrir painel</a>
+                <article class="ticket-card fade-in">
+                    <i class="fas fa-bug"></i>
+                    <h3>bugs e problemas</h3>
+                    <p>relate falhas, comportamentos inesperados, erros técnicos e problemas encontrados em produtos ou sistemas.</p>
+                    <a href="{{ url_for('novo_ticket', categoria='Bug') }}" class="btn btn-primary">abrir ticket</a>
+                </article>
+
+                <article class="ticket-card fade-in">
+                    <i class="fas fa-user-secret"></i>
+                    <h3>denúncia / revisão</h3>
+                    <p>para situações específicas que precisem de análise, apuração, revisão de atendimento ou relato sensível.</p>
+                    <a href="{{ url_for('novo_ticket', categoria='Denuncia') }}" class="btn btn-primary">abrir ticket</a>
                 </article>
             </section>
 
-            <section class="support-box fade-in">
-                <h2>como funciona o atendimento</h2>
-                <p>nosso fluxo foi pensado para deixar seu suporte mais simples. você pode abrir um ticket, enviar detalhes do problema, acompanhar a resposta e manter tudo registrado dentro da plataforma.</p>
+            <section class="tickets-info fade-in">
+                <h2>como abrir um ticket corretamente</h2>
+                <p>para agilizar seu atendimento, escolha a categoria certa e descreva sua necessidade com o máximo de clareza possível. isso reduz retrabalho e melhora muito o tempo de resposta.</p>
 
-                <div class="support-list">
-                    <div class="support-item">1. abra um ticket com o assunto e a categoria correta</div>
-                    <div class="support-item">2. descreva sua necessidade com o máximo de detalhes</div>
-                    <div class="support-item">3. acompanhe as respostas pela área do cliente</div>
-                    <div class="support-item">4. quando necessário, seguimos com ajuste, orçamento ou nova entrega</div>
+                <div class="tickets-steps">
+                    <div class="tickets-step">1. escolha a categoria que melhor combina com sua necessidade</div>
+                    <div class="tickets-step">2. escreva um assunto claro e direto</div>
+                    <div class="tickets-step">3. explique o problema, pedido ou contexto com detalhes</div>
+                    <div class="tickets-step">4. acompanhe a evolução no seu painel e nas respostas do ticket</div>
                 </div>
             </section>
         </div>
@@ -225,8 +249,8 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const searchInput = document.getElementById('supportSearchInput');
-            const searchBtn = document.getElementById('supportSearchBtn');
+            const searchInput = document.getElementById('ticketsSearchInput');
+            const searchBtn = document.getElementById('ticketsSearchBtn');
 
             function goSearch() {
                 const value = (searchInput?.value || '').trim();

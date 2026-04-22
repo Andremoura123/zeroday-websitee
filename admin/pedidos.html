@@ -3,99 +3,314 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pedidos - ZeroDay Admin</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='admin-style.css') }}">
+    <title>Pedidos Admin - ZeroDay</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .admin-page {
+            min-height: 100vh;
+            background: var(--bg);
+            padding: 24px;
+        }
+
+        .admin-shell {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 22px;
+            align-items: start;
+        }
+
+        .admin-sidebar,
+        .admin-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .admin-sidebar {
+            padding: 24px;
+            position: sticky;
+            top: 20px;
+        }
+
+        .admin-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--secondary);
+            margin-bottom: 22px;
+        }
+
+        .admin-brand-badge {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #14b8a6 0%, #0f8f82 100%);
+            color: #041311;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+        }
+
+        .admin-nav {
+            display: grid;
+            gap: 10px;
+        }
+
+        .admin-nav a {
+            min-height: 48px;
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-radius: 16px;
+            background: #0f171b;
+            border: 1px solid var(--border);
+            color: #dffdf8;
+            font-weight: 700;
+        }
+
+        .admin-nav a:hover,
+        .admin-nav a.active {
+            color: var(--primary);
+            border-color: rgba(20,184,166,0.22);
+            background: rgba(20,184,166,0.08);
+        }
+
+        .admin-main {
+            display: grid;
+            gap: 22px;
+        }
+
+        .admin-hero {
+            background: linear-gradient(135deg, #0d171a 0%, #12343a 100%);
+            border: 1px solid rgba(20,184,166,0.14);
+            border-radius: 24px;
+            padding: 28px;
+            box-shadow: var(--shadow);
+        }
+
+        .admin-hero h1 {
+            color: #fff;
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+            line-height: 1;
+            margin: 12px 0 10px;
+        }
+
+        .admin-hero p {
+            color: rgba(243,255,253,0.84);
+        }
+
+        .admin-card-header {
+            padding: 22px 22px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .admin-card-header h2 {
+            color: var(--secondary);
+            margin-bottom: 6px;
+        }
+
+        .admin-card-header p {
+            color: var(--muted);
+        }
+
+        .admin-card-body {
+            padding: 22px;
+        }
+
+        .orders-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .order-card {
+            background: #0f171b;
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            padding: 20px;
+        }
+
+        .order-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .order-top h3 {
+            color: var(--secondary);
+            font-size: 1.05rem;
+        }
+
+        .order-top small {
+            color: var(--muted);
+        }
+
+        .order-meta {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .order-meta span {
+            color: #dffdf8;
+            font-weight: 600;
+        }
+
+        .order-meta small {
+            color: var(--muted);
+            margin-right: 8px;
+        }
+
+        .order-desc {
+            color: var(--muted);
+            line-height: 1.7;
+            margin-bottom: 16px;
+            white-space: pre-wrap;
+        }
+
+        .order-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .order-form select {
+            min-height: 46px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: #091013;
+            color: #dffdf8;
+            padding: 0 12px;
+            outline: none;
+        }
+
+        .empty-box {
+            padding: 28px 18px;
+            border-radius: 18px;
+            text-align: center;
+            color: var(--muted);
+            background: #0f171b;
+            border: 1px solid var(--border);
+        }
+
+        @media (max-width: 1100px) {
+            .admin-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-sidebar {
+                position: static;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .admin-page {
+                padding: 14px;
+            }
+
+            .admin-sidebar,
+            .admin-hero,
+            .admin-card-header,
+            .admin-card-body {
+                padding-left: 18px;
+                padding-right: 18px;
+            }
+
+            .order-form {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
+    <main class="admin-page">
+        <div class="admin-shell">
+            <aside class="admin-sidebar">
+                <div class="admin-brand">
+                    <div class="admin-brand-badge">Z</div>
+                    ZeroDay Admin
+                </div>
 
-    <aside class="admin-sidebar">
-        <div class="sidebar-header">ZeroDay_Admin</div>
-        <nav class="sidebar-nav">
-            <ul>
-                <li><a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-                <li><a href="{{ url_for('admin_pedidos') }}"><i class="fas fa-boxes"></i> Pedidos</a></li>
-                <li><a href="{{ url_for('admin_pagamentos') }}"><i class="fas fa-credit-card"></i> Pagamentos</a></li>
-                <li><a href="{{ url_for('admin_usuarios') }}"><i class="fas fa-users"></i> Usuários</a></li>
-                <li><a href="{{ url_for('admin_admins') }}"><i class="fas fa-shield-alt"></i> Administradores</a></li>
-                <li><a href="#"><i class="fas fa-cog"></i> Configurações</a></li>
-            </ul>
-        </nav>
-        <div class="sidebar-footer">
-            <nav class="sidebar-nav"><ul><li><a href="{{ url_for('admin_logout') }}" style="color: #FF4136;"><i class="fas fa-sign-out-alt"></i> Logout</a></li></ul></nav>
+                <div class="admin-nav">
+                    <a href="{{ url_for('admin_dashboard') }}">dashboard</a>
+                    <a href="{{ url_for('admin_pedidos') }}" class="active">pedidos</a>
+                    <a href="{{ url_for('admin_tickets') }}">tickets</a>
+                    <a href="{{ url_for('admin_catalogo') }}">catálogo</a>
+                    <a href="{{ url_for('admin_usuarios') }}">usuários</a>
+                    <a href="{{ url_for('admin_admins') }}">admins</a>
+                    <a href="{{ url_for('admin_pagamentos') }}">pagamentos</a>
+                    <a href="{{ url_for('admin_configuracoes') }}">configurações</a>
+                    <a href="{{ url_for('admin_logout') }}">sair</a>
+                </div>
+            </aside>
+
+            <section class="admin-main">
+                <section class="admin-hero">
+                    <span class="badge">gestão de pedidos</span>
+                    <h1>pedidos da plataforma</h1>
+                    <p>acompanhe, atualize e gerencie o andamento e o pagamento de cada solicitação.</p>
+                </section>
+
+                <section class="admin-card">
+                    <div class="admin-card-header">
+                        <h2>lista de pedidos</h2>
+                        <p>visualização completa com status de produção e pagamento.</p>
+                    </div>
+
+                    <div class="admin-card-body">
+                        {% if pedidos %}
+                            <div class="orders-grid">
+                                {% for pedido in pedidos %}
+                                    <article class="order-card">
+                                        <div class="order-top">
+                                            <div>
+                                                <h3>#{{ pedido.id }} • {{ pedido.produto_nome }}</h3>
+                                                <small>{{ pedido.data_pedido }}</small>
+                                            </div>
+                                            <div class="badge">{{ pedido.usuario_nome }}</div>
+                                        </div>
+
+                                        <div class="order-meta">
+                                            <span><small>cliente:</small>{{ pedido.usuario_nome }} — {{ pedido.usuario_email }}</span>
+                                            <span><small>produção:</small>{{ pedido.status_pedido }}</span>
+                                            <span><small>pagamento:</small>{{ pedido.status_pagamento }}</span>
+                                        </div>
+
+                                        <div class="order-desc">{{ pedido.descricao }}</div>
+
+                                        <form method="POST" action="{{ url_for('admin_update_pedido', pedido_id=pedido.id) }}" class="order-form">
+                                            <select name="status_pedido">
+                                                <option value="Pendente" {% if pedido.status_pedido == 'Pendente' %}selected{% endif %}>Pendente</option>
+                                                <option value="Em andamento" {% if pedido.status_pedido == 'Em andamento' %}selected{% endif %}>Em andamento</option>
+                                                <option value="Concluido" {% if pedido.status_pedido == 'Concluido' %}selected{% endif %}>Concluído</option>
+                                            </select>
+
+                                            <select name="status_pagamento">
+                                                <option value="Aguardando" {% if pedido.status_pagamento == 'Aguardando' %}selected{% endif %}>Aguardando</option>
+                                                <option value="Confirmado" {% if pedido.status_pagamento == 'Confirmado' %}selected{% endif %}>Confirmado</option>
+                                                <option value="Recusado" {% if pedido.status_pagamento == 'Recusado' %}selected{% endif %}>Recusado</option>
+                                            </select>
+
+                                            <button type="submit" class="btn btn-primary">salvar</button>
+                                        </form>
+                                    </article>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="empty-box">nenhum pedido encontrado.</div>
+                        {% endif %}
+                    </div>
+                </section>
+            </section>
         </div>
-    </aside>
-
-    <main class="admin-main-content">
-        <header class="admin-header">
-            <h2>Gestão de Pedidos</h2>
-            <div class="admin-user">
-                Logado como: **{{ admin_nome }}**
-                <a href="{{ url_for('admin_logout') }}">(Sair)</a>
-            </div>
-        </header>
-
-        <div class="widget-container">
-            <div class="widget-header">
-                <h3>Todos os Pedidos</h3>
-            </div>
-            
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Cliente</th>
-                        <th>Produto</th>
-                        <th>Data</th>
-                        <th>Status Pedido</th>
-                        <th>Pagamento</th>
-                        <th>Ação</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for pedido in pedidos %}
-                    <tr>
-                        <td>#ZD-{{ pedido.id }}</td>
-                        <td>{{ pedido.cliente_nome }}</td>
-                        <td>{{ pedido.produto_nome }}</td>
-                        <td>{{ pedido.data_pedido.split(' ')[0] }}</td>
-                        
-                        <td>
-                            <form action="{{ url_for('admin_atualizar_status', id=pedido.id) }}" method="POST" style="display: flex; gap: 5px;">
-                                <select name="status" class="btn-small" style="padding: 6px;">
-                                    <option value="Recebido" {% if pedido.status_pedido == 'Recebido' %}selected{% endif %}>Recebido</option>
-                                    <option value="Em Produção" {% if pedido.status_pedido == 'Em Produção' %}selected{% endif %}>Em Produção</option>
-                                    <option value="Finalizado" {% if pedido.status_pedido == 'Finalizado' %}selected{% endif %}>Finalizado</option>
-                                    <option value="Cancelado" {% if pedido.status_pedido == 'Cancelado' %}selected{% endif %}>Cancelado</option>
-                                </select>
-                                <button type="submit" class="btn-small">OK</button>
-                            </form>
-                        </td>
-                        
-                        <td>
-                            {% if pedido.status_pagamento == 'Pendente' %}
-                                <span class="status status-waiting">Pendente</span>
-                            {% else %}
-                                <span class="status status-completed">Confirmado</span>
-                            {% endif %}
-                        </td>
-                        
-                        <td class="action-buttons">
-                            {% if pedido.status_pagamento == 'Pendente' %}
-                                <a href="{{ url_for('admin_marcar_pago', id=pedido.id) }}" class="btn-small">Marcar Pago</a>
-                            {% else %}
-                                <span style="color: #777;">-</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="7" style="text-align: center; color: #777;">Nenhum pedido encontrado.</td>
-                    </tr>
-                    {% endfor %}
-                    </tbody>
-            </table>
-        </div>
-
     </main>
 </body>
 </html>

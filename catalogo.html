@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo - ZeroDay</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .catalog-page {
+            padding: 24px 0 40px;
+        }
+
+        .catalog-hero {
+            background: linear-gradient(135deg, #0d171a 0%, #12343a 100%);
+            border-radius: 24px;
+            padding: 34px;
+            color: #fff;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(20,184,166,0.14);
+            margin-bottom: 26px;
+        }
+
+        .catalog-hero h1 {
+            font-size: clamp(2rem, 4vw, 3.5rem);
+            line-height: 1;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            margin-bottom: 14px;
+        }
+
+        .catalog-hero p {
+            max-width: 760px;
+            color: rgba(243,255,253,0.88);
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+
+        .catalog-toolbar {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        .catalog-search {
+            position: relative;
+        }
+
+        .catalog-search input {
+            width: 100%;
+            height: 52px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            outline: 0;
+            padding: 0 18px 0 48px;
+            font-size: 1rem;
+            color: var(--text);
+            background: #0f171b;
+        }
+
+        .catalog-search i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+        }
+
+        .catalog-toolbar .btn {
+            background: var(--primary);
+            color: #041311;
+        }
+
+        .catalog-summary {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .catalog-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 22px;
+            align-items: start;
+        }
+
+        .catalog-sidebar,
+        .catalog-main {
+            min-width: 0;
+        }
+
+        .catalog-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            box-shadow: var(--shadow);
+        }
+
+        .catalog-sidebar-box {
+            padding: 22px;
+            position: sticky;
+            top: 110px;
+        }
+
+        .catalog-sidebar-box h3 {
+            font-size: 1.1rem;
+            margin-bottom: 16px;
+            color: var(--secondary);
+        }
+
+        .category-nav {
+            display: grid;
+            gap: 10px;
+        }
+
+        .category-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            background: #0f171b;
+            border: 1px solid var(--border);
+            font-weight: 700;
+            color: #dffdf8;
+        }
+
+        .category-link:hover,
+        .category-link.active {
+            background: rgba(20,184,166,0.12);
+            color: var(--primary);
+            border-color: rgba(20,184,166,0.22);
+        }
+
+        .catalog-main-inner {
+            padding: 22px;
+        }
+
+        .catalog-category-block + .catalog-category-block {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid var(--border);
+        }
+
+        .catalog-category-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        .catalog-category-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--secondary);
+        }
+
+        .catalog-category-text {
+            color: var(--muted);
+            font-size: 0.96rem;
+        }
+
+        .catalog-items-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .catalog-item-card {
+            background: linear-gradient(180deg, #0b1114 0%, #10181c 100%);
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            padding: 22px;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-height: 240px;
+        }
+
+        .catalog-item-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow);
+            border-color: rgba(20,184,166,0.22);
+        }
+
+        .catalog-item-top {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+        }
+
+        .catalog-item-icon {
+            width: 62px;
+            height: 62px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, #14b8a6 0%, #0f8f82 100%);
+            color: #041311;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .catalog-item-head h3 {
+            font-size: 1.12rem;
+            line-height: 1.2;
+            font-weight: 800;
+            color: var(--secondary);
+            margin-bottom: 8px;
+        }
+
+        .catalog-item-head p {
+            color: var(--muted);
+            font-size: 0.96rem;
+            line-height: 1.55;
+        }
+
+        .catalog-item-actions {
+            margin-top: auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .catalog-empty {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--muted);
+        }
+
+        .catalog-cta {
+            margin-top: 28px;
+            background: linear-gradient(135deg, #0d171a 0%, #12343a 100%);
+            border-radius: 22px;
+            color: #fff;
+            padding: 26px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(20,184,166,0.16);
+        }
+
+        .catalog-cta h3 {
+            font-size: 1.35rem;
+            margin-bottom: 6px;
+        }
+
+        .catalog-cta p {
+            color: rgba(243,255,253,0.88);
+        }
+
+        .catalog-no-results {
+            display: none;
+            text-align: center;
+            padding: 30px 14px 10px;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        @media (max-width: 1100px) {
+            .catalog-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .catalog-sidebar-box {
+                position: static;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .catalog-toolbar {
+                grid-template-columns: 1fr;
+            }
+
+            .catalog-items-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .catalog-hero {
+                padding: 24px 18px;
+            }
+
+            .catalog-main-inner,
+            .catalog-sidebar-box {
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-strip">
+        <div class="container">
+            <strong>ZeroDay</strong> • catálogo profissional com soluções prontas, personalizadas e suporte dedicado
+        </div>
+    </div>
+
+    <header class="main-header">
+        <div class="container header-main">
+            <a href="{{ url_for('home') }}" class="logo">
+                <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="Logo ZeroDay" class="logo-icon" onerror="this.style.display='none'">
+                ZeroDay
+            </a>
+
+            <div class="search-wrapper">
+                <input type="text" class="search-input" placeholder="buscar por item, categoria ou solução" id="globalSearchInput">
+                <button class="search-btn" id="globalSearchBtn" aria-label="Pesquisar">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+
+            <div class="header-actions">
+                {% if usuario_nome %}
+                    <a href="{{ url_for('painel') }}" class="header-action user">
+                        <i class="fas fa-user-circle"></i>
+                        <div>
+                            <small>olá,</small>
+                            <span>{{ usuario_nome.split(' ')[0] }}</span>
+                        </div>
+                    </a>
+                    <a href="{{ url_for('tickets') }}" class="header-action" title="Tickets">
+                        <i class="fas fa-ticket-alt"></i>
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="header-action" title="Sair">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="header-action user">
+                        <i class="fas fa-user-circle"></i>
+                        <div>
+                            <small>olá, faça seu login</small>
+                            <span>ou cadastre-se</span>
+                        </div>
+                    </a>
+                    <a href="{{ url_for('tickets') }}" class="header-action" title="Tickets">
+                        <i class="fas fa-ticket-alt"></i>
+                    </a>
+                    <a href="{{ url_for('suporte') }}" class="header-action" title="Suporte">
+                        <i class="fas fa-headset"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="utility-bar">
+            <div class="container">
+                <div class="utility-links">
+                    <a href="{{ url_for('home') }}">home</a>
+                    <a href="{{ url_for('produtos') }}">produtos</a>
+                    <a href="{{ url_for('catalogo') }}">catálogo</a>
+                    <a href="{{ url_for('tickets') }}">tickets</a>
+                    <a href="{{ url_for('suporte') }}">suporte</a>
+                </div>
+
+                <div class="utility-links">
+                    <a href="{{ url_for('pagamento') }}">pagamento</a>
+                    <a href="{{ url_for('painel') }}">painel</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="department-bar">
+            <div class="container">
+                <a href="{{ url_for('catalogo') }}" class="departments-trigger">
+                    <i class="fas fa-bars"></i>
+                    navegar por categorias
+                </a>
+
+                <div class="department-links">
+                    <a href="{{ url_for('produtos') }}">destaques</a>
+                    <a href="{{ url_for('catalogo') }}">todos os itens</a>
+                    <a href="{{ url_for('formulario', produto='personalizado') }}">projeto personalizado</a>
+                    <a href="{{ url_for('tickets') }}">abrir ticket</a>
+                    <a href="{{ url_for('suporte') }}">atendimento</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="catalog-page">
+        <div class="container">
+            <section class="catalog-hero fade-in">
+                <span class="badge" style="margin-bottom: 16px;">
+                    <i class="fas fa-layer-group"></i> catálogo ZeroDay
+                </span>
+
+                <h1>encontre a solução ideal para o seu projeto</h1>
+                <p>
+                    explore categorias, veja descrições rápidas e encontre scripts, bots, sistemas,
+                    páginas e estruturas que podem ser adaptadas para sua operação.
+                </p>
+
+                <div class="catalog-toolbar">
+                    <div class="catalog-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="catalogSearchInput" placeholder="pesquise dentro do catálogo">
+                    </div>
+
+                    <a href="{{ url_for('formulario', produto='personalizado') }}" class="btn">solicitar projeto</a>
+                </div>
+            </section>
+
+            <div class="catalog-summary fade-in">
+                <span class="badge"><i class="fas fa-check-circle"></i> itens organizados por categoria</span>
+                <span class="badge"><i class="fas fa-bolt"></i> estrutura pronta para expansão</span>
+                <span class="badge"><i class="fas fa-headset"></i> suporte e personalização</span>
+            </div>
+
+            <div class="catalog-layout">
+                <aside class="catalog-sidebar fade-in">
+                    <div class="catalog-panel catalog-sidebar-box">
+                        <h3>categorias</h3>
+
+                        <div class="category-nav">
+                            <a href="#topo-catalogo" class="category-link active">
+                                <span>ver tudo</span>
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+
+                            {% for cat in categorias %}
+                                <a href="#cat-{{ loop.index }}" class="category-link">
+                                    <span>{{ cat.nome }}</span>
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            {% else %}
+                                <div class="category-link">
+                                    <span>sem categorias</span>
+                                    <i class="fas fa-info-circle"></i>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </aside>
+
+                <section class="catalog-main fade-in" id="topo-catalogo">
+                    <div class="catalog-panel catalog-main-inner">
+                        <div class="catalog-no-results" id="catalogNoResults">
+                            nenhum item encontrado para essa busca.
+                        </div>
+
+                        {% for cat in categorias %}
+                            <div class="catalog-category-block catalog-block" id="cat-{{ loop.index }}" data-category="{{ cat.nome|lower }}">
+                                <div class="catalog-category-header">
+                                    <div>
+                                        <h2 class="catalog-category-title">{{ cat.nome }}</h2>
+                                        <div class="catalog-category-text">
+                                            itens e possibilidades dessa categoria
+                                        </div>
+                                    </div>
+
+                                    <span class="badge">
+                                        <i class="fas fa-box-open"></i> {{ cat.itens|length }} item(ns)
+                                    </span>
+                                </div>
+
+                                <div class="catalog-items-grid">
+                                    {% for item in cat.itens %}
+                                        <article class="catalog-item-card catalog-item" data-search="{{ (cat.nome ~ ' ' ~ item.nome ~ ' ' ~ item.descricao)|lower }}">
+                                            <div class="catalog-item-top">
+                                                <div class="catalog-item-icon">
+                                                    <i class="{{ item.icone or 'fas fa-cubes' }}"></i>
+                                                </div>
+
+                                                <div class="catalog-item-head">
+                                                    <h3>{{ item.nome }}</h3>
+                                                    <p>{{ item.descricao }}</p>
+                                                </div>
+                                            </div>
+
+                                            <div class="catalog-item-actions">
+                                                <a href="{{ url_for('formulario', produto=item.nome) }}" class="btn btn-secondary">solicitar este item</a>
+                                                <a href="{{ url_for('suporte') }}" class="btn btn-outline">tirar dúvidas</a>
+                                            </div>
+                                        </article>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="catalog-empty">
+                                o catálogo está vazio no momento. adicione itens no painel administrativo para exibir aqui.
+                            </div>
+                        {% endfor %}
+
+                        <div class="catalog-cta fade-in">
+                            <div>
+                                <h3>não encontrou exatamente o que precisa?</h3>
+                                <p>podemos montar uma solução personalizada baseada no seu fluxo, servidor ou empresa.</p>
+                            </div>
+
+                            <a href="{{ url_for('formulario', produto='personalizado') }}" class="btn btn-primary">pedir orçamento</a>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a href="{{ url_for('home') }}" class="logo">
+                        <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="Logo ZeroDay" class="logo-icon" onerror="this.style.display='none'">
+                        ZeroDay
+                    </a>
+                    <p>
+                        catálogo e soluções digitais para operação, automação, suporte e presença profissional online.
+                    </p>
+                </div>
+
+                <div class="footer-column">
+                    <h4>navegação</h4>
+                    <ul>
+                        <li><a href="{{ url_for('home') }}">home</a></li>
+                        <li><a href="{{ url_for('produtos') }}">produtos</a></li>
+                        <li><a href="{{ url_for('catalogo') }}">catálogo</a></li>
+                        <li><a href="{{ url_for('suporte') }}">suporte</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-column">
+                    <h4>cliente</h4>
+                    <ul>
+                        <li><a href="{{ url_for('login') }}">login</a></li>
+                        <li><a href="{{ url_for('painel') }}">painel</a></li>
+                        <li><a href="{{ url_for('tickets') }}">tickets</a></li>
+                        <li><a href="{{ url_for('pagamento') }}">pagamento</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-column">
+                    <h4>legal</h4>
+                    <ul>
+                        <li><a href="{{ url_for('termos') }}">termos de serviço</a></li>
+                        <li><a href="{{ url_for('privacidade') }}">política de privacidade</a></li>
+                        <li><a href="{{ url_for('admin_login') }}">acesso admin</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <div>&copy; 2025 ZeroDay. Todos os direitos reservados.</div>
+                <div>catálogo profissional e estrutura moderna para vendas e suporte</div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const globalSearchInput = document.getElementById('globalSearchInput');
+            const globalSearchBtn = document.getElementById('globalSearchBtn');
+            const localSearchInput = document.getElementById('catalogSearchInput');
+            const items = Array.from(document.querySelectorAll('.catalog-item'));
+            const blocks = Array.from(document.querySelectorAll('.catalog-block'));
+            const noResults = document.getElementById('catalogNoResults');
+            const categoryLinks = document.querySelectorAll('.category-link');
+
+            function goGlobalSearch() {
+                const value = (globalSearchInput?.value || '').trim();
+                if (!value) {
+                    window.location.href = "{{ url_for('catalogo') }}";
+                    return;
+                }
+                window.location.href = "{{ url_for('catalogo') }}?busca=" + encodeURIComponent(value);
+            }
+
+            if (globalSearchBtn) {
+                globalSearchBtn.addEventListener('click', goGlobalSearch);
+            }
+
+            if (globalSearchInput) {
+                globalSearchInput.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter') goGlobalSearch();
+                });
+            }
+
+            function filterCatalog() {
+                const term = (localSearchInput?.value || '').trim().toLowerCase();
+                let visibleCount = 0;
+
+                items.forEach((item) => {
+                    const haystack = item.dataset.search || '';
+                    const match = !term || haystack.includes(term);
+                    item.style.display = match ? '' : 'none';
+                    if (match) visibleCount++;
+                });
+
+                blocks.forEach((block) => {
+                    const visibleItems = block.querySelectorAll('.catalog-item[style="display: none;"]').length;
+                    const totalItems = block.querySelectorAll('.catalog-item').length;
+                    block.style.display = visibleItems === totalItems ? 'none' : '';
+                });
+
+                if (noResults) {
+                    noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+                }
+            }
+
+            if (localSearchInput) {
+                localSearchInput.addEventListener('input', filterCatalog);
+            }
+
+            categoryLinks.forEach((link) => {
+                link.addEventListener('click', function () {
+                    categoryLinks.forEach((item) => item.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, {
+                threshold: 0.12
+            });
+
+            document.querySelectorAll('.fade-in').forEach((el) => observer.observe(el));
+        });
+    </script>
+</body>
+</html>

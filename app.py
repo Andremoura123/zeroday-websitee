@@ -1,357 +1,999 @@
 import sqlite3
 import os
-from flask import Flask, render_template, request, redirect, url_for, g, session, flash, abort
+import sys
+import uuid
+import requests
+from requests_oauthlib import OAuth2Session
+from flask import Flask, render_template, request, redirect, url_for, g, session, flash, send_from_directory
+from werkzeug.utils import secure_filename
 import hashlib
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
 
-# --- CONFIGURAÇÃO INICIAL ---
-app = Flask(__name__, static_folder='assets', template_folder='.') 
-DATABASE = 'zeroday.db'
-app.secret_key = 'minha_chave_secreta_super_segura_12345' 
+load_dotenv()
 
-# --- FUNÇÕES DO BANCO DE DADOS (Helpers) ---
+# ==============================================================================
+# 1. CONFIGURAÇÕES GERAIS E VARIÁVEIS DE AMBIENTE
+# ==============================================================================
+DISCORD_CLIENT_ID = os.getenv("DISCORD_CLIENT_ID")
+DISCORD_CLIENT_SECRET = os.getenv("DISCORD_CLIENT_SECRET")
+DISCORD_GUILD_ID = os.getenv("DISCORD_GUILD_ID")
+FLASK_SECRET_KEY = os.getenv("FLASK_SECRET_KEY")
+DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+
+if not FLASK_SECRET_KEY:
+    print("AVISO: FLASK_SECRET_KEY não encontrada. Usando chave fallback.")
+    FLASK_SECRET_KEY = "fallback-secret-key-123"
+
+RAILWAY_ENVIRONMENT = os.environ.get("RAILWAY_ENVIRONMENT") is not None
+FLY_ENVIRONMENT = os.environ.get("FLY_APP_NAME") is not None
+
+IS_PRODUCTION = RAILWAY_ENVIRONMENT or FLY_ENVIRONMENT
+
+if FLY_ENVIRONMENT:
+    DISCORD_REDIRECT_URI = "https://SEU-APP.fly.dev/callback"
+elif RAILWAY_ENVIRONMENT:
+    DISCORD_REDIRECT_URI = "https://SEU-APP.up.railway.app/callback"
+else:
+    DISCORD_REDIRECT_URI = "http://127.0.0.1:5000/callback"
+
+app = Flask(__name__, static_folder="assets", template_folder=".")
+app.secret_key = FLASK_SECRET_KEY
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+
+if IS_PRODUCTION:
+    DATABASE_PATH = "/data"
+else:
+    DATABASE_PATH = "data"
+
+DATABASE = os.path.join(DATABASE_PATH, "zeroday.db")
+UPLOAD_FOLDER = os.path.join(DATABASE_PATH, "uploads")
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "zip", "rar", "txt", "pdf"}
+
+AUTHORIZATION_BASE_URL = "https://discord.com/api/oauth2/authorize"
+TOKEN_URL = "https://discord.com/api/oauth2/token"
+API_BASE_URL = "https://discord.com/api/users/@me"
+SCOPES = ["identify", "email", "guilds"]
+
+# ==============================================================================
+# 2. FUNÇÕES AUXILIARES
+# ==============================================================================
+
 def get_db():
-    db = getattr(g, '_database', None)
+    db = getattr(g, "_database", None)
     if db is None:
         db = g._database = sqlite3.connect(DATABASE)
         db.row_factory = sqlite3.Row
     return db
 
+
 @app.teardown_appcontext
 def close_connection(exception):
-    db = getattr(g, '_database', None)
-    if db is not None: db.close()
+    db = getattr(g, "_database", None)
+    if db is not None:
+        db.close()
+
 
 def hash_password(password):
-    return hashlib.sha256(password.encode('utf-8')).hexdigest()
+    return hashlib.sha256(password.encode("utf-8")).hexdigest()
 
-# --- FUNÇÃO DE MIGRAÇÃO (Revertida) ---
+
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def get_current_user_name():
+    return session.get("usuario_nome")
+
+
+# ==============================================================================
+# 3. SETUP DO BANCO
+# ==============================================================================
+
 def setup_database():
-    print("Iniciando setup do banco de dados...")
+    print(f"--- INICIANDO SETUP DO BANCO DE DADOS EM: {DATABASE} ---")
+
     try:
+        os.makedirs(DATABASE_PATH, exist_ok=True)
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
         with app.app_context():
             db = get_db()
             cursor = db.cursor()
-            
-            # 1. Tabela 'administradores'
-            cursor.execute('''
+
+            cursor.execute("""
                 CREATE TABLE IF NOT EXISTS administradores (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT NOT NULL, email TEXT UNIQUE NOT NULL,
-                    senha_hash TEXT NOT NULL, permissao TEXT NOT NULL
-                );
-            ''')
-            print("Tabela 'administradores' verificada.")
-            
-            # 2. Tabela 'usuarios'
-            cursor.execute('''
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    nome TEXT NOT NULL,
+                    email TEXT UNIQUE NOT NULL,
+                    senha_hash TEXT NOT NULL,
+                    permissao TEXT NOT NULL
+                )
+            """)
+
+            cursor.execute("""
                 CREATE TABLE IF NOT EXISTS usuarios (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT NOT NULL, email TEXT UNIQUE NOT NULL,
-                    discord_user TEXT, senha_hash TEXT NOT NULL
-                );
-            ''')
-            print("Tabela 'usuarios' (base) verificada.")
-            
-            # 3. Tabela 'pedidos'
-            cursor.execute('''
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    nome TEXT NOT NULL,
+                    email TEXT UNIQUE NOT NULL,
+                    discord_user TEXT,
+                    senha_hash TEXT,
+                    discord_id TEXT,
+                    avatar_hash TEXT,
+                    status TEXT DEFAULT 'Ativo',
+                    data_cadastro TEXT
+                )
+            """)
+
+            cursor.execute("""
                 CREATE TABLE IF NOT EXISTS pedidos (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT, usuario_id INTEGER NOT NULL, produto_nome TEXT NOT NULL,
-                    descricao TEXT NOT NULL, anexos_path TEXT, status_pedido TEXT NOT NULL,
-                    status_pagamento TEXT NOT NULL, data_pedido TEXT NOT NULL,
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    usuario_id INTEGER NOT NULL,
+                    produto_nome TEXT NOT NULL,
+                    descricao TEXT NOT NULL,
+                    anexos_path TEXT,
+                    status_pedido TEXT NOT NULL,
+                    status_pagamento TEXT NOT NULL,
+                    data_pedido TEXT NOT NULL,
                     FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
-                );
-            ''')
-            print("Tabela 'pedidos' verificada.")
-            
-            # 4. MIGRAÇÃO: Coluna 'status' em 'usuarios'
+                )
+            """)
+
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS catalogo_itens (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    categoria TEXT NOT NULL,
+                    nome TEXT NOT NULL,
+                    descricao TEXT NOT NULL,
+                    icone TEXT
+                )
+            """)
+
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS tickets (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    usuario_id INTEGER,
+                    categoria TEXT,
+                    assunto TEXT,
+                    descricao TEXT,
+                    prioridade TEXT,
+                    status TEXT,
+                    data_criacao TEXT
+                )
+            """)
+
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS ticket_mensagens (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ticket_id INTEGER,
+                    remetente_tipo TEXT,
+                    remetente_nome TEXT,
+                    mensagem TEXT,
+                    data_envio TEXT
+                )
+            """)
+
+            # Migrações
             try:
                 cursor.execute("ALTER TABLE usuarios ADD COLUMN status TEXT NOT NULL DEFAULT 'Ativo'")
-                print("Coluna 'status' adicionada a 'usuarios'.")
-            except sqlite3.OperationalError as e:
-                if "duplicate column name: status" in str(e):
-                    print("Coluna 'status' já existe em 'usuarios'.")
-                else: raise e
-            
-            # 5. MIGRAÇÃO: Coluna 'data_cadastro' em 'usuarios'
+            except Exception:
+                pass
+
             try:
                 cursor.execute("ALTER TABLE usuarios ADD COLUMN data_cadastro TEXT")
-                print("Coluna 'data_cadastro' adicionada a 'usuarios'.")
-            except sqlite3.OperationalError as e:
-                if "duplicate column name: data_cadastro" in str(e):
-                    print("Coluna 'data_cadastro' já existe em 'usuarios'.")
-                else: raise e
-            
-            # Insere admins (sempre seguro)
-            admins = [
-                ('Admin Master', 'master@zeroday.com', hash_password("admin123"), 'Super Admin'),
-                ('Admin Gestor', 'gestor@zeroday.com', hash_password("admin123"), 'Admin'),
-                ('Admin Financeiro', 'financeiro@zeroday.com', hash_password("admin123"), 'Admin (Pagamentos)')
-            ]
-            cursor.executemany('INSERT OR IGNORE INTO administradores (nome, email, senha_hash, permissao) VALUES (?, ?, ?, ?)', admins)
-            
+            except Exception:
+                pass
+
+            try:
+                cursor.execute("ALTER TABLE usuarios ADD COLUMN discord_id TEXT")
+            except Exception:
+                pass
+
+            try:
+                cursor.execute("ALTER TABLE usuarios ADD COLUMN avatar_hash TEXT")
+            except Exception:
+                pass
+
+            try:
+                cursor.execute("ALTER TABLE usuarios ADD COLUMN discord_user TEXT")
+            except Exception:
+                pass
+
+            senha_correta_hash = "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3"  # admin123
+            email_admin = "admin@zeroday.com"
+
+            cursor.execute(
+                "UPDATE administradores SET senha_hash = ? WHERE email = ?",
+                (senha_correta_hash, email_admin)
+            )
+
+            if cursor.rowcount == 0:
+                cursor.execute(
+                    "INSERT INTO administradores (nome, email, senha_hash, permissao) VALUES (?, ?, ?, ?)",
+                    ("Admin Default", email_admin, senha_correta_hash, "Super Admin")
+                )
+                print(">> Admin padrão criado com sucesso.")
+            else:
+                print(">> Senha do Admin restaurada para o padrão (admin123).")
+
             db.commit()
-            print("Banco de dados pronto.")
+            print("--- BANCO DE DADOS PRONTO ---")
 
     except Exception as e:
-        print(f"Ocorreu um erro durante o setup: {e}")
-        if db: db.rollback()
-    finally:
-        if db: db.close()
+        print(f"Erro no setup: {e}")
 
-# ==========================================================
-# ROTAS DO SITE PRINCIPAL (CLIENTE) (Revertido)
-# ==========================================================
-@app.route('/')
+
+# ==============================================================================
+# 4. FRONTEND
+# ==============================================================================
+
+@app.route("/")
 def home():
-    return render_template('index.html', usuario_nome=session.get('usuario_nome'))
-@app.route('/produtos')
+    return render_template("index.html", usuario_nome=get_current_user_name())
+
+
+@app.route("/produtos")
 def produtos():
-    return render_template('produtos.html', usuario_nome=session.get('usuario_nome'))
+    return render_template("produtos.html", usuario_nome=get_current_user_name())
 
-@app.route('/suporte')
-def suporte():
-    # REVERTIDO: Não busca mais no banco
-    return render_template('suporte.html', 
-                           usuario_nome=session.get('usuario_nome'))
 
-@app.route('/pagamento')
-def pagamento():
-    if 'usuario_id' not in session: return redirect(url_for('login'))
-    # REVERTIDO: Não busca mais no banco
-    return render_template('pagamento.html', 
-                           usuario_nome=session.get('usuario_nome'))
+@app.route("/catalogo")
+def catalogo():
+    db = get_db()
+    categorias = []
 
-@app.route('/cadastro', methods=['GET', 'POST'])
-def cadastro():
-    if request.method == 'POST':
-        nome, email, senha = request.form['nome'], request.form['email'], request.form['password']
-        if not nome or not email or not senha:
-            flash('Todos os campos são obrigatórios.', 'error'); return redirect(url_for('cadastro'))
-        senha_hash = hash_password(senha)
-        data_atual = datetime.now().strftime("%Y-%m-%d")
-        db = get_db()
-        try:
-            db.execute('INSERT INTO usuarios (nome, email, senha_hash, status, data_cadastro) VALUES (?, ?, ?, ?, ?)', 
-                       (nome, email, senha_hash, 'Ativo', data_atual))
-            db.commit()
-            flash('Conta criada com sucesso! Faça o login.', 'success'); return redirect(url_for('login'))
-        except sqlite3.IntegrityError:
-            flash('Este email já está cadastrado.', 'error'); return redirect(url_for('cadastro'))
-    return render_template('cadastro.html', usuario_nome=None)
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if 'usuario_id' in session: return redirect(url_for('painel'))
-    if request.method == 'POST':
-        email, senha = request.form['email'], request.form['password']
-        db = get_db(); usuario = db.execute('SELECT * FROM usuarios WHERE email = ?', (email,)).fetchone()
-        if usuario and usuario['senha_hash'] == hash_password(senha):
-            if usuario['status'] == 'Bloqueado':
-                flash('Esta conta foi suspensa.', 'error'); return redirect(url_for('login'))
-            session['usuario_id'], session['usuario_nome'] = usuario['id'], usuario['nome']
-            return redirect(url_for('painel'))
-        else:
-            flash('Email ou senha inválidos.', 'error'); return redirect(url_for('login'))
-    return render_template('login.html', usuario_nome=None)
-
-@app.route('/painel')
-def painel():
-    if 'usuario_id' not in session: return redirect(url_for('login'))
-    db = get_db(); usuario_id = session['usuario_id']
-    meus_pedidos = db.execute('SELECT * FROM pedidos WHERE usuario_id = ? ORDER BY data_pedido DESC', (usuario_id,)).fetchall()
-    meus_dados = db.execute('SELECT nome, email, discord_user FROM usuarios WHERE id = ?', (usuario_id,)).fetchone()
-    return render_template('painel.html', usuario_nome=session.get('usuario_nome'), pedidos=meus_pedidos, dados=meus_dados)
-
-@app.route('/logout')
-def logout():
-    session.pop('usuario_id', None); session.pop('usuario_nome', None)
-    return redirect(url_for('home'))
-
-@app.route('/formulario')
-def formulario():
-    if 'usuario_id' not in session:
-        flash('Você precisa estar logado para solicitar um produto.', 'error'); return redirect(url_for('login'))
-    produto_escolhido = request.args.get('produto', 'discord')
-    return render_template('formulario.html', 
-                           produto_escolhido=produto_escolhido, 
-                           usuario_nome=session.get('usuario_nome'))
-
-@app.route('/solicitar_pedido', methods=['POST'])
-def solicitar_pedido():
-    if 'usuario_id' not in session: return redirect(url_for('login'))
     try:
-        produto, descricao, discord_user = request.form['produto'], request.form['descricao'], request.form['discord']
-        usuario_id = session['usuario_id']; data_atual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        categorias_db = db.execute(
+            "SELECT DISTINCT categoria FROM catalogo_itens ORDER BY categoria"
+        ).fetchall()
+
+        for cat in categorias_db:
+            itens = db.execute(
+                "SELECT * FROM catalogo_itens WHERE categoria = ? ORDER BY nome",
+                (cat["categoria"],)
+            ).fetchall()
+
+            categorias.append({
+                "nome": cat["categoria"],
+                "itens": itens
+            })
+    except Exception:
+        categorias = []
+
+    return render_template(
+        "catalogo.html",
+        usuario_nome=get_current_user_name(),
+        categorias=categorias
+    )
+
+
+@app.route("/formulario/<produto>")
+def formulario(produto):
+    if "usuario_id" not in session:
+        flash("Você precisa estar logado para fazer um pedido.", "error")
+        return redirect(url_for("login"))
+
+    return render_template(
+        "formulario.html",
+        produto_escolhido=produto,
+        usuario_nome=get_current_user_name()
+    )
+
+
+@app.route("/termos")
+def termos():
+    return render_template("termos.html", usuario_nome=get_current_user_name())
+
+
+@app.route("/privacidade")
+def privacidade():
+    return render_template("privacidade.html", usuario_nome=get_current_user_name())
+
+
+@app.route("/pagamento")
+def pagamento():
+    if "usuario_id" not in session:
+        return redirect(url_for("login"))
+    return render_template("pagamento.html", usuario_nome=get_current_user_name())
+
+
+# ==============================================================================
+# 5. TICKETS E SUPORTE
+# ==============================================================================
+
+@app.route("/tickets")
+def tickets():
+    return render_template("tickets.html", usuario_nome=get_current_user_name())
+
+
+@app.route("/suporte")
+def suporte():
+    return render_template("suporte.html", usuario_nome=get_current_user_name())
+
+
+@app.route("/novo_ticket/<categoria>")
+def novo_ticket(categoria):
+    if "usuario_id" not in session:
+        flash("Faça login para abrir um ticket.", "error")
+        return redirect(url_for("login"))
+
+    return render_template(
+        "novo_ticket.html",
+        categoria_escolhida=categoria,
+        usuario_nome=get_current_user_name()
+    )
+
+
+@app.route("/enviar_ticket", methods=["POST"])
+def enviar_ticket():
+    if "usuario_id" not in session:
+        return redirect(url_for("login"))
+
+    assunto = request.form.get("assunto", "").strip()
+    categoria = request.form.get("categoria", "").strip()
+    descricao = request.form.get("mensagem", "").strip()
+    prioridade = request.form.get("prioridade", "").strip()
+    usuario_id = session["usuario_id"]
+
+    if not assunto or not categoria or not descricao:
+        flash("Preencha os campos obrigatórios do ticket.", "error")
+        return redirect(url_for("tickets"))
+
+    db = get_db()
+    data_hoje = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    cursor = db.execute(
+        """
+        INSERT INTO tickets (usuario_id, categoria, assunto, descricao, prioridade, status, data_criacao)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+        (usuario_id, categoria, assunto, descricao, prioridade or "Normal", "Pendente", data_hoje)
+    )
+    ticket_id = cursor.lastrowid
+
+    db.execute(
+        """
+        INSERT INTO ticket_mensagens (ticket_id, remetente_tipo, remetente_nome, mensagem, data_envio)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (ticket_id, "cliente", get_current_user_name(), descricao, data_hoje)
+    )
+    db.commit()
+
+    if DISCORD_WEBHOOK_URL:
+        try:
+            requests.post(
+                DISCORD_WEBHOOK_URL,
+                json={
+                    "content": f"🎫 **NOVO TICKET #{ticket_id}**\nUsuário: {get_current_user_name()}\nCategoria: {categoria}\nAssunto: {assunto}"
+                },
+                timeout=10
+            )
+        except Exception:
+            pass
+
+    flash(f"Ticket #{ticket_id} criado com sucesso! Acompanhe no seu painel.", "success")
+    return redirect(url_for("painel", aba="Tickets"))
+
+
+@app.route("/ver_ticket/<int:ticket_id>")
+def ver_ticket(ticket_id):
+    if "usuario_id" not in session:
+        return redirect(url_for("login"))
+
+    db = get_db()
+    ticket = db.execute(
+        "SELECT * FROM tickets WHERE id = ? AND usuario_id = ?",
+        (ticket_id, session["usuario_id"])
+    ).fetchone()
+
+    if not ticket:
+        flash("Ticket não encontrado.", "error")
+        return redirect(url_for("painel"))
+
+    mensagens = db.execute(
+        "SELECT * FROM ticket_mensagens WHERE ticket_id = ? ORDER BY data_envio ASC",
+        (ticket_id,)
+    ).fetchall()
+
+    return render_template("ticket_chat.html", ticket=ticket, mensagens=mensagens, is_admin=False)
+
+
+@app.route("/enviar_mensagem_ticket/<int:ticket_id>", methods=["POST"])
+def enviar_mensagem_ticket(ticket_id):
+    if not session.get("is_admin") and "usuario_id" not in session:
+        return redirect(url_for("login"))
+
+    mensagem = request.form.get("mensagem", "").strip()
+    if not mensagem:
+        flash("Digite uma mensagem.", "error")
+        if session.get("is_admin"):
+            return redirect(url_for("admin_ver_ticket", ticket_id=ticket_id))
+        return redirect(url_for("ver_ticket", ticket_id=ticket_id))
+
+    is_admin = session.get("is_admin", False)
+    remetente_tipo = "admin" if is_admin else "cliente"
+    remetente_nome = session.get("usuario_nome")
+    data_envio = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    db = get_db()
+    db.execute(
+        """
+        INSERT INTO ticket_mensagens (ticket_id, remetente_tipo, remetente_nome, mensagem, data_envio)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (ticket_id, remetente_tipo, remetente_nome, mensagem, data_envio)
+    )
+
+    if is_admin:
+        db.execute("UPDATE tickets SET status = 'Respondido' WHERE id = ?", (ticket_id,))
+        db.commit()
+        return redirect(url_for("admin_ver_ticket", ticket_id=ticket_id))
+
+    db.commit()
+    return redirect(url_for("ver_ticket", ticket_id=ticket_id))
+
+
+# ==============================================================================
+# 6. AUTENTICAÇÃO
+# ==============================================================================
+
+def get_discord_auth():
+    return OAuth2Session(
+        DISCORD_CLIENT_ID,
+        redirect_uri=DISCORD_REDIRECT_URI,
+        scope=SCOPES
+    )
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if "usuario_id" in session:
+        return redirect(url_for("painel"))
+
+    # Login clássico por formulário
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        senha = request.form.get("senha", "")
+
         db = get_db()
-        db.execute('''
-            INSERT INTO pedidos (usuario_id, produto_nome, descricao, status_pedido, status_pagamento, data_pedido, anexos_path)
+        usuario = db.execute(
+            "SELECT * FROM usuarios WHERE lower(email) = ?",
+            (email,)
+        ).fetchone()
+
+        if usuario and usuario["senha_hash"] and hash_password(senha) == usuario["senha_hash"]:
+            session["usuario_id"] = usuario["id"]
+            session["usuario_nome"] = usuario["nome"]
+            session["is_admin"] = False
+            flash("Login realizado com sucesso.", "success")
+            return redirect(url_for("painel"))
+
+        flash("Email ou senha incorretos.", "error")
+        return redirect(url_for("login"))
+
+    # Link Discord OAuth
+    discord_url = "#"
+    if DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET:
+        try:
+            discord = get_discord_auth()
+            authorization_url, state = discord.authorization_url(AUTHORIZATION_BASE_URL)
+            session["oauth_state"] = state
+            discord_url = authorization_url
+        except Exception:
+            discord_url = "#"
+
+    return render_template("login.html", discord_url=discord_url)
+
+
+@app.route("/callback")
+def callback():
+    if request.args.get("error"):
+        return redirect(url_for("login"))
+
+    if "oauth_state" not in session or session["oauth_state"] != request.args.get("state"):
+        return redirect(url_for("login"))
+
+    discord = get_discord_auth()
+
+    try:
+        token = discord.fetch_token(
+            TOKEN_URL,
+            client_secret=DISCORD_CLIENT_SECRET,
+            authorization_response=request.url
+        )
+    except Exception:
+        flash("Não foi possível concluir o login com Discord.", "error")
+        return redirect(url_for("login"))
+
+    session["oauth_token"] = token
+    user_data = discord.get(API_BASE_URL).json()
+
+    try:
+        guilds = discord.get("https://discord.com/api/users/@me/guilds").json()
+        if isinstance(guilds, list) and DISCORD_GUILD_ID:
+            is_member = any(guild["id"] == DISCORD_GUILD_ID for guild in guilds)
+            if not is_member:
+                flash("Você precisa ser membro do nosso Discord.", "error")
+                return redirect(url_for("login"))
+    except Exception:
+        pass
+
+    db = get_db()
+    discord_id = user_data["id"]
+    email = user_data.get("email", f"{discord_id}@discord.local")
+    usuario_db = db.execute(
+        "SELECT * FROM usuarios WHERE discord_id = ? OR email = ?",
+        (discord_id, email)
+    ).fetchone()
+
+    if usuario_db:
+        session["usuario_id"] = usuario_db["id"]
+        session["usuario_nome"] = usuario_db["nome"]
+        session["is_admin"] = False
+
+        db.execute(
+            "UPDATE usuarios SET discord_user = ?, avatar_hash = ? WHERE id = ?",
+            (user_data.get("username"), user_data.get("avatar"), usuario_db["id"])
+        )
+        db.commit()
+    else:
+        nome = user_data.get("global_name") or user_data.get("username") or "Usuário Discord"
+        db.execute(
+            """
+            INSERT INTO usuarios (nome, email, discord_user, discord_id, avatar_hash, status, data_cadastro)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (usuario_id, produto, descricao, 'Recebido', 'Pendente', data_atual, ''))
-        db.execute('UPDATE usuarios SET discord_user = ? WHERE id = ?', (discord_user, usuario_id))
+            """,
+            (
+                nome,
+                email,
+                user_data.get("username"),
+                discord_id,
+                user_data.get("avatar"),
+                "Ativo",
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            )
+        )
         db.commit()
-        return redirect(url_for('pagamento'))
-    except Exception as e:
-        flash(f'Ocorreu um erro ao enviar seu pedido: {e}', 'error'); return redirect(url_for('formulario'))
 
-# ==========================================================
-# ROTAS DO PAINEL ADMIN (Revertido)
-# ==========================================================
-@app.route('/admin/', methods=['GET', 'POST'])
+        novo_usuario = db.execute(
+            "SELECT * FROM usuarios WHERE discord_id = ?",
+            (discord_id,)
+        ).fetchone()
+
+        session["usuario_id"] = novo_usuario["id"]
+        session["usuario_nome"] = nome
+        session["is_admin"] = False
+
+    return redirect(url_for("painel"))
+
+
+@app.route("/cadastro", methods=["GET", "POST"])
+def cadastro():
+    if request.method == "GET":
+        return render_template("cadastro.html", usuario_nome=get_current_user_name())
+
+    nome = request.form.get("nome", "").strip()
+    email = request.form.get("email", "").strip().lower()
+    discord_user = request.form.get("discord", "").strip()
+    senha = request.form.get("senha", "")
+    confirmar_senha = request.form.get("confirmar_senha", "")
+
+    if not nome or not email or not senha:
+        flash("Preencha todos os campos obrigatórios.", "error")
+        return redirect(url_for("cadastro"))
+
+    if senha != confirmar_senha:
+        flash("As senhas não conferem.", "error")
+        return redirect(url_for("cadastro"))
+
+    db = get_db()
+
+    if db.execute("SELECT id FROM usuarios WHERE lower(email) = ?", (email,)).fetchone():
+        flash("Este e-mail já está em uso.", "error")
+        return redirect(url_for("cadastro"))
+
+    try:
+        db.execute(
+            """
+            INSERT INTO usuarios (nome, email, discord_user, senha_hash, status, data_cadastro)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                nome,
+                email,
+                discord_user or None,
+                hash_password(senha),
+                "Ativo",
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            )
+        )
+        db.commit()
+        flash("Cadastro realizado com sucesso. Agora faça login.", "success")
+        return redirect(url_for("login"))
+    except Exception:
+        flash("Erro ao cadastrar usuário.", "error")
+        return redirect(url_for("cadastro"))
+
+
+@app.route("/painel")
+def painel():
+    if "usuario_id" not in session:
+        return redirect(url_for("login"))
+
+    db = get_db()
+    usuario_id = session["usuario_id"]
+
+    usuario = db.execute(
+        "SELECT * FROM usuarios WHERE id = ?",
+        (usuario_id,)
+    ).fetchone()
+
+    pedidos = db.execute(
+        "SELECT * FROM pedidos WHERE usuario_id = ? ORDER BY data_pedido DESC",
+        (usuario_id,)
+    ).fetchall()
+
+    tickets = db.execute(
+        "SELECT * FROM tickets WHERE usuario_id = ? ORDER BY data_criacao DESC",
+        (usuario_id,)
+    ).fetchall()
+
+    return render_template(
+        "painel.html",
+        usuario=usuario,
+        dados=usuario,
+        pedidos=pedidos,
+        tickets=tickets,
+        usuario_nome=get_current_user_name()
+    )
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("home"))
+
+
+# ==============================================================================
+# 7. PEDIDOS
+# ==============================================================================
+
+@app.route("/solicitar_pedido", methods=["POST"])
+def solicitar_pedido():
+    if "usuario_id" not in session:
+        return redirect(url_for("login"))
+
+    produto = request.form.get("produto", "").strip()
+    descricao = request.form.get("descricao", "").strip()
+    anexos = request.files.getlist("anexos")
+    usuario_id = session["usuario_id"]
+
+    if not produto or not descricao:
+        flash("Preencha produto e descrição.", "error")
+        return redirect(url_for("painel"))
+
+    anexos_path = None
+    if anexos and any(file.filename for file in anexos):
+        try:
+            pedido_uuid = str(uuid.uuid4())
+            pedido_dir = os.path.join(UPLOAD_FOLDER, pedido_uuid)
+            os.makedirs(pedido_dir, exist_ok=True)
+
+            for file in anexos:
+                if file and file.filename and allowed_file(file.filename):
+                    file.save(os.path.join(pedido_dir, secure_filename(file.filename)))
+
+            anexos_path = pedido_uuid
+        except Exception:
+            pass
+
+    db = get_db()
+    db.execute(
+        """
+        INSERT INTO pedidos (usuario_id, produto_nome, descricao, anexos_path, status_pedido, status_pagamento, data_pedido)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            usuario_id,
+            produto,
+            descricao,
+            anexos_path,
+            "Pendente",
+            "Aguardando",
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        )
+    )
+    db.commit()
+
+    if DISCORD_WEBHOOK_URL:
+        try:
+            requests.post(
+                DISCORD_WEBHOOK_URL,
+                json={"content": f"🚨 **NOVO PEDIDO**\nProduto: {produto}"},
+                timeout=10
+            )
+        except Exception:
+            pass
+
+    flash("Pedido realizado! Por favor, efetue o pagamento.", "success")
+    return redirect(url_for("pagamento"))
+
+
+@app.route("/download_anexo/<pedido_path>/<filename>")
+def download_anexo(pedido_path, filename):
+    if "usuario_id" not in session and not session.get("is_admin"):
+        return redirect(url_for("login"))
+
+    return send_from_directory(
+        os.path.join(UPLOAD_FOLDER, pedido_path),
+        filename,
+        as_attachment=True
+    )
+
+
+# ==============================================================================
+# 8. ADMIN
+# ==============================================================================
+
+def admin_required(f):
+    def wrapper(*args, **kwargs):
+        if not session.get("is_admin"):
+            return redirect(url_for("admin_login"))
+        return f(*args, **kwargs)
+    wrapper.__name__ = f.__name__
+    return wrapper
+
+
+@app.route("/gerenciamento")
 def admin_login():
-    if 'admin_id' in session: return redirect(url_for('admin_dashboard'))
-    if request.method == 'POST':
-        email, senha = request.form['email'], request.form['password']
-        db = get_db(); admin = db.execute('SELECT * FROM administradores WHERE email = ?', (email,)).fetchone()
-        if admin and admin['senha_hash'] == hash_password(senha):
-            session['admin_id'], session['admin_nome'] = admin['id'], admin['nome']
-            return redirect(url_for('admin_dashboard'))
-        else:
-            flash('Email ou senha inválidos.', 'error'); return redirect(url_for('admin_login'))
-    return render_template('admin/index.html')
+    if session.get("is_admin"):
+        return redirect(url_for("admin_dashboard"))
+    return render_template("admin_login.html")
 
-@app.route('/admin/dashboard')
+
+@app.route("/admin_login_post", methods=["POST"])
+def admin_login_post():
+    email = request.form.get("email", "").strip().lower()
+    senha = request.form.get("senha", "")
+
+    db = get_db()
+    admin_user = db.execute(
+        "SELECT * FROM administradores WHERE lower(email) = ?",
+        (email,)
+    ).fetchone()
+
+    if admin_user and hash_password(senha) == admin_user["senha_hash"]:
+        session["admin_id"] = admin_user["id"]
+        session["usuario_nome"] = admin_user["nome"]
+        session["is_admin"] = True
+        return redirect(url_for("admin_dashboard"))
+
+    flash("Credenciais inválidas.", "error")
+    return redirect(url_for("admin_login"))
+
+
+@app.route("/admin/dashboard")
+@admin_required
 def admin_dashboard():
-    if 'admin_id' not in session: return redirect(url_for('admin_login'))
     db = get_db()
-    total_pedidos = db.execute('SELECT COUNT(id) FROM pedidos').fetchone()[0]
-    pedidos_pendentes = db.execute("SELECT COUNT(id) FROM pedidos WHERE status_pedido = 'Recebido'").fetchone()[0]
-    pagos = db.execute("SELECT COUNT(id) FROM pedidos WHERE status_pagamento = 'Confirmado'").fetchone()[0]
-    inicio_do_mes = datetime.now().strftime("%Y-%m-01")
-    novos_usuarios = db.execute('SELECT COUNT(id) FROM usuarios WHERE data_cadastro >= ?', (inicio_do_mes,)).fetchone()[0]
-    stats = {
-        'total_pedidos': total_pedidos, 'pedidos_pendentes': pedidos_pendentes,
-        'pagos_confirmados': pagos, 'novos_usuarios': novos_usuarios
-    }
-    labels_grafico = []; data_grafico = []
-    dias_dict = {}
-    for i in range(7):
-        dia = (datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d")
-        dias_dict[dia] = 0
-    sete_dias_atras = (datetime.now() - timedelta(days=6)).strftime("%Y-%m-%d")
-    dados_grafico_db = db.execute("SELECT strftime('%Y-%m-%d', data_pedido) as dia, COUNT(id) as contagem FROM pedidos WHERE data_pedido >= ? GROUP BY dia", (sete_dias_atras,)).fetchall()
-    for linha in dados_grafico_db:
-        if linha['dia'] in dias_dict:
-            dias_dict[linha['dia']] = linha['contagem']
-    for dia, contagem in sorted(dias_dict.items()):
-        labels_grafico.append(dia[5:]); data_grafico.append(contagem)
-    return render_template('admin/dashboard.html', 
-                           admin_nome=session.get('admin_nome'), stats=stats,
-                           labels_grafico=labels_grafico, data_grafico=data_grafico)
 
-@app.route('/admin/pedidos')
+    try:
+        total = db.execute("SELECT COUNT(id) FROM pedidos").fetchone()[0]
+        pendentes = db.execute("SELECT COUNT(id) FROM pedidos WHERE status_pedido = 'Pendente'").fetchone()[0]
+        pagos = db.execute("SELECT COUNT(id) FROM pedidos WHERE status_pagamento = 'Confirmado'").fetchone()[0]
+        tickets_abertos = db.execute("SELECT COUNT(id) FROM tickets WHERE status != 'Concluido'").fetchone()[0]
+
+        stats = {
+            "total_pedidos": total,
+            "pedidos_pendentes": pendentes,
+            "pagos_confirmados": pagos,
+            "tickets_abertos": tickets_abertos
+        }
+    except Exception:
+        stats = {
+            "total_pedidos": 0,
+            "pedidos_pendentes": 0,
+            "pagos_confirmados": 0,
+            "tickets_abertos": 0
+        }
+
+    labels_grafico = [(datetime.now() - timedelta(days=i)).strftime("%d/%m") for i in range(6, -1, -1)]
+    dados_grafico = [0, 0, 0, 0, 0, 0, stats["total_pedidos"]]
+
+    return render_template(
+        "admin/dashboard.html",
+        stats=stats,
+        labels_grafico=labels_grafico,
+        dados_grafico=dados_grafico,
+        usuario_nome=session.get("usuario_nome")
+    )
+
+
+@app.route("/admin/pedidos")
+@admin_required
 def admin_pedidos():
-    if 'admin_id' not in session: return redirect(url_for('admin_login'))
     db = get_db()
-    lista_de_pedidos = db.execute('SELECT p.*, u.nome as cliente_nome FROM pedidos p JOIN usuarios u ON p.usuario_id = u.id ORDER BY p.data_pedido DESC').fetchall()
-    return render_template('admin/pedidos.html', admin_nome=session.get('admin_nome'), pedidos=lista_de_pedidos)
+    pedidos = db.execute("""
+        SELECT p.*, u.nome AS usuario_nome, u.email AS usuario_email
+        FROM pedidos p
+        JOIN usuarios u ON p.usuario_id = u.id
+        ORDER BY p.data_pedido DESC
+    """).fetchall()
 
-@app.route('/admin/pagamentos')
-def admin_pagamentos():
-    if 'admin_id' not in session: return redirect(url_for('admin_login'))
+    return render_template("admin/pedidos.html", pedidos=pedidos, admin_nome=session.get("usuario_nome"))
+
+
+@app.route("/admin/pedidos/update/<int:pedido_id>", methods=["POST"])
+@admin_required
+def admin_update_pedido(pedido_id):
     db = get_db()
-    lista_de_pagamentos = db.execute("SELECT p.id, p.status_pagamento, u.nome as cliente_nome, p.produto_nome FROM pedidos p JOIN usuarios u ON p.usuario_id = u.id WHERE p.status_pagamento = 'Pendente' ORDER BY p.data_pedido ASC").fetchall()
-    return render_template('admin/pagamentos.html', admin_nome=session.get('admin_nome'), pagamentos=lista_de_pagamentos)
+    db.execute(
+        "UPDATE pedidos SET status_pedido = ?, status_pagamento = ? WHERE id = ?",
+        (
+            request.form.get("status_pedido"),
+            request.form.get("status_pagamento"),
+            pedido_id
+        )
+    )
+    db.commit()
+    return redirect(url_for("admin_pedidos"))
 
-@app.route('/admin/usuarios')
-def admin_usuarios():
-    if 'admin_id' not in session: return redirect(url_for('admin_login'))
+
+@app.route("/admin/tickets")
+@admin_required
+def admin_tickets():
     db = get_db()
-    lista_de_usuarios = db.execute('SELECT id, nome, email, discord_user, status, data_cadastro FROM usuarios ORDER BY nome').fetchall()
-    return render_template('admin/usuarios.html', admin_nome=session.get('admin_nome'), usuarios=lista_de_usuarios)
+    tickets = db.execute("""
+        SELECT t.*, u.nome as usuario_nome, u.email as usuario_email
+        FROM tickets t
+        JOIN usuarios u ON t.usuario_id = u.id
+        ORDER BY t.data_criacao DESC
+    """).fetchall()
 
-@app.route('/admin/admins')
+    return render_template("admin_tickets.html", tickets=tickets, admin_nome=session.get("usuario_nome"))
+
+
+@app.route("/admin/ver_ticket/<int:ticket_id>")
+@admin_required
+def admin_ver_ticket(ticket_id):
+    db = get_db()
+    ticket = db.execute("SELECT * FROM tickets WHERE id = ?", (ticket_id,)).fetchone()
+    mensagens = db.execute(
+        "SELECT * FROM ticket_mensagens WHERE ticket_id = ? ORDER BY data_envio ASC",
+        (ticket_id,)
+    ).fetchall()
+
+    return render_template("ticket_chat.html", ticket=ticket, mensagens=mensagens, is_admin=True)
+
+
+@app.route("/admin/fechar_ticket/<int:ticket_id>")
+@admin_required
+def admin_fechar_ticket(ticket_id):
+    db = get_db()
+    db.execute("UPDATE tickets SET status = 'Concluido' WHERE id = ?", (ticket_id,))
+    db.commit()
+    return redirect(url_for("admin_tickets"))
+
+
+@app.route("/admin/catalogo")
+@admin_required
+def admin_catalogo():
+    db = get_db()
+    itens = db.execute("SELECT * FROM catalogo_itens ORDER BY categoria, nome").fetchall()
+    return render_template("admin/catalogo.html", itens=itens, admin_nome=session.get("usuario_nome"))
+
+
+@app.route("/admin/catalogo/adicionar", methods=["POST"])
+@admin_required
+def admin_adicionar_item():
+    nome = request.form.get("nome", "").strip()
+    categoria = request.form.get("categoria", "").strip()
+    descricao = request.form.get("descricao", "").strip()
+    icone = request.form.get("icone", "").strip() or "fas fa-box"
+
+    db = get_db()
+    db.execute(
+        "INSERT INTO catalogo_itens (categoria, nome, descricao, icone) VALUES (?, ?, ?, ?)",
+        (categoria, nome, descricao, icone)
+    )
+    db.commit()
+    flash("Item adicionado.", "success")
+    return redirect(url_for("admin_catalogo"))
+
+
+@app.route("/admin/catalogo/deletar/<int:item_id>")
+@admin_required
+def admin_deletar_item(item_id):
+    db = get_db()
+    db.execute("DELETE FROM catalogo_itens WHERE id = ?", (item_id,))
+    db.commit()
+    flash("Item removido.", "success")
+    return redirect(url_for("admin_catalogo"))
+
+
+@app.route("/admin/admins")
+@admin_required
 def admin_admins():
-    if 'admin_id' not in session: return redirect(url_for('admin_login'))
     db = get_db()
-    lista_de_admins = db.execute('SELECT id, nome, email, permissao FROM administradores ORDER BY id').fetchall()
-    return render_template('admin/admins.html', admin_nome=session.get('admin_nome'), admins=lista_de_admins)
+    admins = db.execute("SELECT * FROM administradores ORDER BY id").fetchall()
+    return render_template("admin/admins.html", admins=admins, admin_nome=session.get("usuario_nome"))
 
-@app.route('/admin/logout')
-def admin_logout():
-    session.clear(); return redirect(url_for('admin_login'))
 
-# Rota de Configurações (REVERTIDA)
-@app.route('/admin/configuracoes')
+@app.route("/admin/admins/adicionar", methods=["POST"])
+@admin_required
+def admin_adicionar_admin():
+    nome = request.form.get("nome", "").strip()
+    email = request.form.get("email", "").strip().lower()
+    senha = request.form.get("senha", "")
+
+    db = get_db()
+    if db.execute("SELECT id FROM administradores WHERE lower(email) = ?", (email,)).fetchone():
+        flash("Email já existe.", "error")
+        return redirect(url_for("admin_admins"))
+
+    db.execute(
+        "INSERT INTO administradores (nome, email, senha_hash, permissao) VALUES (?, ?, ?, ?)",
+        (nome, email, hash_password(senha), "Admin")
+    )
+    db.commit()
+    flash("Admin adicionado.", "success")
+    return redirect(url_for("admin_admins"))
+
+
+@app.route("/admin/admins/deletar/<int:admin_id>")
+@admin_required
+def admin_deletar_admin(admin_id):
+    if admin_id == session.get("admin_id"):
+        flash("Não pode se deletar.", "error")
+        return redirect(url_for("admin_admins"))
+
+    db = get_db()
+    db.execute("DELETE FROM administradores WHERE id = ?", (admin_id,))
+    db.commit()
+    flash("Admin removido.", "success")
+    return redirect(url_for("admin_admins"))
+
+
+@app.route("/admin/usuarios")
+@admin_required
+def admin_usuarios():
+    db = get_db()
+    usuarios = db.execute("SELECT * FROM usuarios ORDER BY data_cadastro DESC").fetchall()
+    return render_template("admin/usuarios.html", usuarios=usuarios, admin_nome=session.get("usuario_nome"))
+
+
+@app.route("/admin/pagamentos")
+@admin_required
+def admin_pagamentos():
+    return render_template("admin/pagamentos.html", admin_nome=session.get("usuario_nome"))
+
+
+@app.route("/admin/configuracoes")
+@admin_required
 def admin_configuracoes():
-    if 'admin_id' not in session: return redirect(url_for('admin_login'))
-    return render_template('admin/configuracoes.html', admin_nome=session.get('admin_nome'))
+    return render_template("admin/configuracoes.html", admin_nome=session.get("usuario_nome"))
 
-# Rotas de Ação (Pedidos)
-@app.route('/admin/pedido/pagar/<int:id>')
-def admin_marcar_pago(id):
-    if 'admin_id' not in session: return redirect(url_for('admin_login'))
-    db = get_db()
-    db.execute("UPDATE pedidos SET status_pagamento = 'Confirmado' WHERE id = ?", (id,))
-    db.commit()
-    return redirect(request.referrer or url_for('admin_pedidos'))
 
-@app.route('/admin/pedido/status/<int:id>', methods=['POST'])
-def admin_atualizar_status(id):
-    if 'admin_id' not in session: return redirect(url_for('admin_login'))
-    novo_status = request.form['status']
-    if novo_status in ['Recebido', 'Em Produção', 'Finalizado', 'Cancelado']:
-        db = get_db()
-        db.execute("UPDATE pedidos SET status_pedido = ? WHERE id = ?", (novo_status, id))
-        db.commit()
-    return redirect(url_for('admin_pedidos'))
+@app.route("/admin_logout")
+def admin_logout():
+    session.clear()
+    return redirect(url_for("admin_login"))
 
-# Rotas de Ação (Usuários)
-@app.route('/admin/usuario/suspender/<int:id>')
-def admin_suspender_usuario(id):
-    if 'admin_id' not in session: return redirect(url_for('admin_login'))
-    db = get_db()
-    db.execute("UPDATE usuarios SET status = 'Bloqueado' WHERE id = ?", (id,))
-    db.commit()
-    return redirect(url_for('admin_usuarios'))
 
-@app.route('/admin/usuario/reativar/<int:id>')
-def admin_reativar_usuario(id):
-    if 'admin_id' not in session: return redirect(url_for('admin_login'))
-    db = get_db()
-    db.execute("UPDATE usuarios SET status = 'Ativo' WHERE id = ?", (id,))
-    db.commit()
-    return redirect(url_for('admin_usuarios'))
+# ==============================================================================
+# 9. FINAL
+# ==============================================================================
 
-@app.route('/admin/usuario/reset/<int:id>', methods=['GET', 'POST'])
-def admin_reset_user_password(id):
-    if 'admin_id' not in session: return redirect(url_for('admin_login'))
-    db = get_db()
-    usuario = db.execute('SELECT id, nome, email FROM usuarios WHERE id = ?', (id,)).fetchone()
-    if not usuario:
-        flash('Usuário não encontrado.', 'error')
-        return redirect(url_for('admin_usuarios'))
-    if request.method == 'POST':
-        nova_senha = request.form['nova_senha']
-        confirmar_senha = request.form['confirmar_senha']
-        if not nova_senha or not confirmar_senha:
-            flash('Por favor, preencha os dois campos.', 'error')
-            return redirect(url_for('admin_reset_user_password', id=id))
-        if nova_senha != confirmar_senha:
-            flash('As senhas não coincidem.', 'error')
-            return redirect(url_for('admin_reset_user_password', id=id))
-        nova_senha_hash = hash_password(nova_senha)
-        db.execute('UPDATE usuarios SET senha_hash = ? WHERE id = ?', (nova_senha_hash, id))
-        db.commit()
-        flash(f'Senha do usuário {usuario["nome"]} atualizada com sucesso.', 'success')
-        return redirect(url_for('admin_usuarios'))
-    return render_template('admin/reset_password.html', 
-                           admin_nome=session.get('admin_nome'), 
-                           usuario=usuario)
-
-# ==========================================================
-# ANTI-CACHE
-# ==========================================================
 @app.after_request
 def add_header(response):
     if app.debug:
-        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
-        response.headers['Pragma'] = 'no-cache'
-        response.headers['Expires'] = '0'
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     return response
-# ==========================================================
-# INICIAR O SERVIDOR
-# ==========================================================
-if __name__ == '__main__':
-    # Este 'setup' é SÓ para testes locais
-    setup_database() 
-    print("Iniciando o servidor Flask local em http://127.0.0.1:5000/")
-    app.run(debug=True, port=5000)
+
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1 and sys.argv[1] == "setup":
+        setup_database()
+    else:
+        app.run(debug=True, port=5000)

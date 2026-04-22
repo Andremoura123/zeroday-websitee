@@ -3,71 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solicitar Pedido - ZeroDay</title>
+    <title>Novo Ticket - ZeroDay</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
     <style>
-        .request-page {
+        .ticket-form-page {
             padding: 24px 0 42px;
         }
 
-        .request-layout {
+        .ticket-form-layout {
             display: grid;
-            grid-template-columns: 1fr 420px;
+            grid-template-columns: 1fr 400px;
             gap: 22px;
             align-items: start;
         }
 
-        .request-card,
-        .request-side {
+        .ticket-form-card,
+        .ticket-side-card {
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 24px;
             box-shadow: var(--shadow);
         }
 
-        .request-header {
+        .ticket-form-header {
             padding: 28px 28px 18px;
             border-bottom: 1px solid var(--border);
         }
 
-        .request-header h1 {
+        .ticket-form-header h1 {
             font-size: clamp(2rem, 4vw, 3rem);
             line-height: 1;
             color: var(--secondary);
             margin: 12px 0 10px;
         }
 
-        .request-header p {
+        .ticket-form-header p {
             color: var(--muted);
             line-height: 1.7;
             max-width: 780px;
         }
 
-        .request-body {
+        .ticket-form-body {
             padding: 28px;
         }
 
-        .request-form {
+        .ticket-form {
             display: grid;
             gap: 18px;
         }
 
-        .request-field {
+        .ticket-field {
             display: grid;
             gap: 8px;
         }
 
-        .request-field label {
+        .ticket-field label {
             font-size: 0.95rem;
             font-weight: 700;
             color: #dffdf8;
         }
 
-        .request-input,
-        .request-textarea,
-        .request-file {
+        .ticket-input,
+        .ticket-select,
+        .ticket-textarea {
             width: 100%;
             border-radius: 16px;
             border: 1px solid var(--border);
@@ -77,73 +77,72 @@
             transition: var(--transition);
         }
 
-        .request-input,
-        .request-file {
+        .ticket-input,
+        .ticket-select {
             min-height: 54px;
             padding: 0 16px;
         }
 
-        .request-textarea {
+        .ticket-textarea {
             min-height: 180px;
             padding: 16px;
             resize: vertical;
         }
 
-        .request-input:focus,
-        .request-textarea:focus,
-        .request-file:focus {
+        .ticket-input:focus,
+        .ticket-select:focus,
+        .ticket-textarea:focus {
             border-color: rgba(20,184,166,0.35);
             box-shadow: 0 0 0 4px rgba(20,184,166,0.08);
         }
 
-        .request-actions {
+        .ticket-actions {
             display: flex;
             flex-wrap: wrap;
             gap: 12px;
             padding-top: 8px;
         }
 
-        .request-side {
+        .ticket-side-card {
             padding: 24px;
         }
 
-        .request-side h2 {
+        .ticket-side-card h2 {
             color: var(--secondary);
-            font-size: 1.2rem;
             margin-bottom: 10px;
         }
 
-        .request-side p {
+        .ticket-side-card p {
             color: var(--muted);
             line-height: 1.7;
             margin-bottom: 16px;
         }
 
-        .request-info-list {
+        .ticket-side-list {
             display: grid;
             gap: 12px;
         }
 
-        .request-info-item {
+        .ticket-side-item {
             background: #0f171b;
             border: 1px solid var(--border);
             border-radius: 16px;
             padding: 14px 16px;
         }
 
-        .request-info-item strong {
+        .ticket-side-item strong {
             display: block;
             color: #dffdf8;
             margin-bottom: 6px;
         }
 
-        .request-info-item span {
+        .ticket-side-item span {
             color: var(--muted);
             font-size: 0.95rem;
             line-height: 1.6;
         }
 
-        .request-highlight {
+        .ticket-highlight {
             margin-top: 18px;
             padding: 16px;
             border-radius: 18px;
@@ -151,27 +150,27 @@
             border: 1px solid rgba(20,184,166,0.16);
         }
 
-        .request-highlight strong {
+        .ticket-highlight strong {
             display: block;
             color: #fff;
             margin-bottom: 8px;
         }
 
-        .request-highlight span {
+        .ticket-highlight span {
             color: rgba(243,255,253,0.84);
             line-height: 1.6;
         }
 
         @media (max-width: 1100px) {
-            .request-layout {
+            .ticket-form-layout {
                 grid-template-columns: 1fr;
             }
         }
 
         @media (max-width: 768px) {
-            .request-header,
-            .request-body,
-            .request-side {
+            .ticket-form-header,
+            .ticket-form-body,
+            .ticket-side-card {
                 padding-left: 18px;
                 padding-right: 18px;
             }
@@ -182,7 +181,7 @@
 
     <div class="top-strip">
         <div class="container">
-            <strong>ZeroDay</strong> • envie sua solicitação com detalhes e acompanhe o andamento pelo painel
+            <strong>ZeroDay</strong> • abra seu ticket com detalhes para agilizar o atendimento
         </div>
     </div>
 
@@ -194,24 +193,24 @@
             </a>
 
             <div class="search-wrapper">
-                <input type="text" class="search-input" placeholder="buscar no catálogo" id="formSearchInput">
-                <button class="search-btn" id="formSearchBtn" aria-label="Pesquisar">
+                <input type="text" class="search-input" placeholder="buscar no catálogo" id="newTicketSearchInput">
+                <button class="search-btn" id="newTicketSearchBtn" aria-label="Pesquisar">
                     <i class="fas fa-search"></i>
                 </button>
             </div>
 
             <div class="header-actions">
-                <a href="{{ url_for('catalogo') }}" class="header-action">
-                    <i class="fas fa-th-large"></i>
-                </a>
                 <a href="{{ url_for('painel') }}" class="header-action">
                     <i class="fas fa-user-cog"></i>
                 </a>
-                <a href="{{ url_for('tickets') }}" class="header-action user">
+                <a href="{{ url_for('tickets') }}" class="header-action">
                     <i class="fas fa-ticket-alt"></i>
+                </a>
+                <a href="{{ url_for('suporte') }}" class="header-action user">
+                    <i class="fas fa-headset"></i>
                     <div>
                         <small>precisa de ajuda?</small>
-                        <span>abrir ticket</span>
+                        <span>suporte</span>
                     </div>
                 </a>
             </div>
@@ -229,76 +228,77 @@
 
                 <div class="utility-links">
                     <a href="{{ url_for('painel') }}">painel</a>
-                    <a href="{{ url_for('pagamento') }}">pagamento</a>
+                    <a href="{{ url_for('formulario', produto='personalizado') }}">novo pedido</a>
                 </div>
             </div>
         </div>
     </header>
 
-    <main class="request-page">
+    <main class="ticket-form-page">
         <div class="container">
-            <div class="request-layout">
-                <section class="request-card fade-in">
-                    <div class="request-header">
-                        <span class="badge"><i class="fas fa-pen"></i> novo pedido</span>
-                        <h1>solicitar {{ produto_escolhido }}</h1>
-                        <p>descreva o que você precisa com o máximo de detalhes. quanto melhor o briefing, mais rápido e preciso fica o andamento do seu pedido.</p>
+            <div class="ticket-form-layout">
+                <section class="ticket-form-card fade-in">
+                    <div class="ticket-form-header">
+                        <span class="badge"><i class="fas fa-ticket-alt"></i> novo atendimento</span>
+                        <h1>abrir ticket de {{ categoria_escolhida }}</h1>
+                        <p>descreva sua solicitação com clareza para que o atendimento seja mais rápido e objetivo.</p>
                     </div>
 
-                    <div class="request-body">
-                        <form method="POST" action="{{ url_for('solicitar_pedido') }}" enctype="multipart/form-data" class="request-form">
-                            <div class="request-field">
-                                <label for="produto">produto / serviço</label>
-                                <input type="text" id="produto" name="produto" class="request-input" value="{{ produto_escolhido }}" readonly>
+                    <div class="ticket-form-body">
+                        <form method="POST" action="{{ url_for('enviar_ticket') }}" class="ticket-form">
+                            <input type="hidden" name="categoria" value="{{ categoria_escolhida }}">
+
+                            <div class="ticket-field">
+                                <label for="assunto">assunto</label>
+                                <input type="text" id="assunto" name="assunto" class="ticket-input" placeholder="resuma seu problema ou pedido" required>
                             </div>
 
-                            <div class="request-field">
-                                <label for="descricao">descrição do pedido</label>
-                                <textarea id="descricao" name="descricao" class="request-textarea" placeholder="explique tudo o que você precisa, objetivos, referências, funcionalidades desejadas, prazos e qualquer detalhe importante." required></textarea>
+                            <div class="ticket-field">
+                                <label for="prioridade">prioridade</label>
+                                <select id="prioridade" name="prioridade" class="ticket-select">
+                                    <option value="Normal">Normal</option>
+                                    <option value="Alta">Alta</option>
+                                    <option value="Urgente">Urgente</option>
+                                </select>
                             </div>
 
-                            <div class="request-field">
-                                <label for="anexos">anexos</label>
-                                <input type="file" id="anexos" name="anexos" class="request-file" multiple>
+                            <div class="ticket-field">
+                                <label for="mensagem">mensagem</label>
+                                <textarea id="mensagem" name="mensagem" class="ticket-textarea" placeholder="explique o que aconteceu, o que você precisa, contexto e detalhes importantes." required></textarea>
                             </div>
 
-                            <div class="request-actions">
-                                <button type="submit" class="btn btn-primary">enviar pedido</button>
-                                <a href="{{ url_for('catalogo') }}" class="btn btn-secondary">voltar ao catálogo</a>
+                            <div class="ticket-actions">
+                                <button type="submit" class="btn btn-primary">enviar ticket</button>
+                                <a href="{{ url_for('tickets') }}" class="btn btn-secondary">voltar</a>
                             </div>
                         </form>
                     </div>
                 </section>
 
-                <aside class="request-side fade-in">
-                    <h2>como preencher melhor</h2>
-                    <p>um bom briefing ajuda a acelerar a análise e melhora a qualidade da entrega. sempre que possível, envie contexto, objetivo e referências.</p>
+                <aside class="ticket-side-card fade-in">
+                    <h2>dicas para um bom ticket</h2>
+                    <p>um chamado bem preenchido melhora o tempo de resposta e facilita a análise da equipe.</p>
 
-                    <div class="request-info-list">
-                        <div class="request-info-item">
-                            <strong>objetivo</strong>
-                            <span>diga claramente o que você quer alcançar com esse pedido.</span>
+                    <div class="ticket-side-list">
+                        <div class="ticket-side-item">
+                            <strong>assunto claro</strong>
+                            <span>resuma a solicitação em poucas palavras para facilitar a triagem.</span>
                         </div>
 
-                        <div class="request-info-item">
-                            <strong>detalhes técnicos</strong>
-                            <span>informe funções, integrações, estilo visual e tudo o que precisa ser incluído.</span>
+                        <div class="ticket-side-item">
+                            <strong>detalhes completos</strong>
+                            <span>explique o contexto, o erro ou o pedido da forma mais objetiva possível.</span>
                         </div>
 
-                        <div class="request-info-item">
-                            <strong>referências</strong>
-                            <span>se tiver imagens, links ou exemplos, envie nos anexos para facilitar.</span>
-                        </div>
-
-                        <div class="request-info-item">
-                            <strong>acompanhamento</strong>
-                            <span>depois do envio, acompanhe o pedido no painel e siga para a etapa de pagamento.</span>
+                        <div class="ticket-side-item">
+                            <strong>acompanhe no painel</strong>
+                            <span>depois do envio, volte na sua área do cliente para acompanhar as respostas.</span>
                         </div>
                     </div>
 
-                    <div class="request-highlight">
+                    <div class="ticket-highlight">
                         <strong>dica ZeroDay</strong>
-                        <span>pedidos bem descritos reduzem retrabalho e tornam o processo muito mais rápido e profissional.</span>
+                        <span>evite mensagens muito curtas. quanto melhor o contexto, mais rápido conseguimos ajudar.</span>
                     </div>
                 </aside>
             </div>
@@ -307,8 +307,8 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const searchInput = document.getElementById('formSearchInput');
-            const searchBtn = document.getElementById('formSearchBtn');
+            const searchInput = document.getElementById('newTicketSearchInput');
+            const searchBtn = document.getElementById('newTicketSearchBtn');
 
             function goSearch() {
                 const value = (searchInput?.value || '').trim();

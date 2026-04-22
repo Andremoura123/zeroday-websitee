@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Termos de Serviço - ZeroDay</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
+    <style>
+        #zero-day-3d-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: -1;
+            background-color: #000;
+        }
+        /* Garante que o conteúdo principal (header, main, etc.) fica por CIMA */
+        .main-header, .container, main, .main-footer {
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="zero-day-3d-bg"></div>
+
+    <header class="main-header">
+        <a href="{{ url_for('home') }}" class="logo">
+            <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="ZeroDay Icon" class="logo-icon">
+            ZeroDay
+        </a>
+        <nav class="main-nav">
+            <ul>
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('produtos') }}">Produtos</a></li>
+                <li><a href="{{ url_for('catalogo') }}">Catálogo</a></li>
+                <li><a href="{{ url_for('tickets') }}">Tickets</a></li>
+                <li><a href="{{ url_for('suporte') }}">Suporte</a></li>
+                
+                {% if usuario_nome %}
+                    <li><a href="{{ url_for('painel') }}" class="btn btn-primary">Painel ({{ usuario_nome.split(' ')[0] }})</a></li>
+                    <li><a href="{{ url_for('logout') }}" class="btn btn-secondary">Sair</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('login') }}" class="btn btn-secondary">Login</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="widget-container" style="background: rgba(17, 17, 17, 0.8); backdrop-filter: blur(2px); border: 1px solid rgba(218, 165, 32, 0.2); border-radius: 5px; padding: 30px;">
+            <h2>Termos e Condições de Uso - ZeroDay</h2>
+            <p style="color: #aaa; margin-top: 10px;">Última atualização: 15 de novembro de 2025</p>
+            <p style="margin-top: 20px;">Bem-vindo à ZeroDay! Ao acessar e usar nosso site (zeroday-website.fly.dev) e nossos serviços, você concorda em cumprir os seguintes termos e condições:</p>
+            
+            <h3 style="margin-top: 20px;">1. Nossos Serviços</h3>
+            <p>A ZeroDay oferece produtos digitais sob medida, incluindo, mas não se limitando a: Edição de "Cinematics", Automatização de Discord (bots e sistemas) e Criação de Imagens por IA.</p>
+
+            <h3 style="margin-top: 20px;">2. Contas de Usuário</h3>
+            <p>a. Para solicitar um serviço, você deve criar uma conta, fornecendo informações precisas (nome, e-mail).<br>
+               b. Você é responsável por manter a confidencialidade de sua senha e por todas as atividades que ocorram em sua conta.</p>
+
+            <h3 style="margin-top: 20px;">3. Pagamento e Pedidos</h3>
+            <p>a. Nossos serviços são projetos personalizados. O valor final do projeto é definido em contato direto via Discord.<br>
+               b. Para iniciar qualquer pedido, exigimos um pagamento inicial (sinal) no valor fixo de **R$ 30,00**.<br>
+               c. O restante do pagamento (valor total do projeto menos os R$ 30,00 do sinal) será cobrado após a conclusão e antes da entrega final do projeto.</p>
+            
+            <h3 style="margin-top: 20px;">4. Reembolso</h3>
+            <p>a. Devido à natureza personalizada do trabalho digital, o pagamento inicial (sinal) de R$ 30,00 **NÃO é reembolsável** em nenhuma circunstância, pois ele cobre os custos de alocação de tempo e recursos para o início do desenvolvimento.<br>
+               b. Se o cliente cancelar o projeto no meio do desenvolvimento, o sinal não será devolvido.</p>
+
+            <h3 style="margin-top: 20px;">5. Propriedade Intelectual</h3>
+            <p>a. O cliente detém todos os direitos sobre o produto final entregue, desde que o pagamento integral (100%) tenha sido efetuado.<br>
+               b. A ZeroDay reserva-se o direito de usar o trabalho concluído em seu portfólio.</p>
+
+            <h3 style="margin-top: 20px;">6. Conduta do Usuário</h3>
+            <p>É proibido usar nosso site para tentar obter acesso não autorizado aos nossos sistemas ou enviar informações fraudulentas.</p>
+
+            <h3 style="margin-top: 20px;">7. Modificações nos Termos</h3>
+            <p>Reservamo-nos o direito de modificar estes termos a qualquer momento.</p>
+
+            <h3 style="margin-top: 20px;">9. Contato</h3>
+            <p>Para dúvidas sobre estes termos, entre em contato através do nosso servidor oficial no Discord (disponível na página "Suporte").</p>
+        </div>
+    </main>
+
+    <footer class="main-footer">
+    <div class="footer-container">
+        
+        <div class="footer-col col-left">
+            <div class="logo" style="font-size: 1.5rem; margin-bottom: 15px; color: #fff;">
+                <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="" style="height: 25px; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">
+                ZeroDay
+            </div>
+            <p style="color: #888; font-family: 'Roboto Mono'; font-size: 0.85rem; line-height: 1.6; max-width: 300px;">
+                Soluções digitais de alta performance.<br>
+                Precisão cirúrgica para o seu negócio.
+            </p>
+        </div>
+
+        <div class="footer-col col-center">
+            <h4>Navegação</h4>
+            <ul>
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('produtos') }}">Produtos</a></li>
+                <li><a href="{{ url_for('catalogo') }}">Catálogo</a></li>
+                <li><a href="{{ url_for('tickets') }}">Tickets</a></li>
+                <li><a href="{{ url_for('suporte') }}">Suporte</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-col col-right">
+            <h4>Suporte & Legal</h4>
+            <ul>
+                <li><a href="{{ url_for('tickets') }}">Central de Ajuda</a></li>
+                <li><a href="{{ url_for('termos') }}">Termos de Serviço</a></li>
+                <li><a href="{{ url_for('privacidade') }}">Política de Privacidade</a></li>
+                <li><a href="{{ url_for('admin_login') }}" style="opacity: 0.5;">Acesso Admin</a></li>
+            </ul>
+        </div>
+
+    </div>
+
+    <div class="copyright">
+        &copy; 2025 ZeroDay. Todos os direitos reservados.
+    </div>
+</footer>
+    
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <script src="{{ url_for('static', filename='three-bg.js') }}"></script>
+</body>
+</html>

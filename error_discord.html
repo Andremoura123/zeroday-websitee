@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acesso Negado - ZeroDay</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header class="main-header">
+        <a href="{{ url_for('home') }}" class="logo">
+            <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="ZeroDay Icon" class="logo-icon">
+            ZeroDay
+        </a>
+    </header>
+    <main class="container">
+        <div class="form-container fade-in" style="max-width: 500px; text-align: center;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #FF4136; margin-bottom: 20px;"></i>
+            <h2 style="color: #FF4136;">Acesso Negado</h2>
+            
+            <p style="color: #FFFFFF; margin-top: 20px;">
+                Você foi autenticado com sucesso pelo Discord, mas
+                <strong style="color: var(--color-primary-gold);">você não é membro do nosso servidor oficial.</strong>
+            </p>
+            <p style="color: #aaa; margin-top: 10px;">
+                Para ter acesso à plataforma ZeroDay, é obrigatório ser membro da nossa comunidade no Discord.
+            </p>
+
+            <!-- 
+                !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                COLE SEU LINK DE CONVITE DO DISCORD AQUI 
+                !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            -->
+            <a href="https://discord.gg/dvdCEvUmbX" target="_blank" class="btn btn-primary" style="width: 100%; margin-top: 30px; background-color: #5865F2; border-color: #5865F2;">
+                <i class="fab fa-discord" style="margin-right: 10px;"></i>
+                Entrar no Servidor
+            </a>
+            
+            <a href="{{ url_for('logout') }}" class="btn btn-secondary" style="width: 100%; margin-top: 15px;">
+                Tentar Novamente (Logout)
+            </a>
+        </div>
+    </main>
+    
+    <footer class="main-footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4 class="logo">
+                    <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="ZeroDay Icon" class="logo-icon">
+                    ZeroDay
+                </h4>
+                <p>Projetos digitais com precisão cirúrgica e estética tecnológica.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Links Úteis</h4>
+                <ul>
+                    <li><a href="{{ url_for('home') }}">Home</a></li>
+                    <li><a href="{{ url_for('produtos') }}">Produtos</a></li>
+                    <li><a href="{{ url_for('catalogo') }}">Catálogo</a></li>
+                    <li><a href="{{ url_for('login') }}">Login</a></li>
+                    <li><a href="{{ url_for('ajuda') }}">Suporte (Discord)</a></li>
+                    <li><a href="{{ url_for('admin_login') }}" style="color:#555;">Admin</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="{{ url_for('termos') }}">Termos de Serviço</a></li>
+                    <li><a href="{{ url_for('privacidade') }}">Política de Privacidade</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2025 ZeroDay. Todos os direitos reservados.
+        </div>
+    </footer>
+</body>
+</html>

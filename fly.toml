@@ -1,0 +1,33 @@
+# fly.toml app configuration file
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'zeroday-website'
+primary_region = 'gru'
+
+[build]
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+[[mounts]]
+  source = "zeroday_data"
+  destination = "/data"
+
+# ADICIONE ESTAS DUAS LINHAS ABAIXO
+[deploy]
+  release_command = "python app.py setup"
+
+  # Adicione isto ao seu fly.toml
+
+[processes]
+  # Esta é a linha corrigida.
+  # Diz ao Gunicorn para "ouvir" em TODAS as moradas (0.0.0.0)
+  # E na porta correTA (8080).
+  app = "gunicorn --bind 0.0.0.0:8080 app:app --log-file -"

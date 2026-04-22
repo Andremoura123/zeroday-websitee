@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Política de Privacidade - ZeroDay</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
+    <style>
+        #zero-day-3d-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: -1;
+            background-color: #000;
+        }
+        /* Garante que o conteúdo principal (header, main, etc.) fica por CIMA */
+        .main-header, .container, main, .main-footer {
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="zero-day-3d-bg"></div>
+
+    <header class="main-header">
+        <a href="{{ url_for('home') }}" class="logo">
+            <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="ZeroDay Icon" class="logo-icon">
+            ZeroDay
+        </a>
+        <nav class="main-nav">
+            <ul>
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('produtos') }}">Produtos</a></li>
+                <li><a href="{{ url_for('catalogo') }}">Catálogo</a></li>
+                
+                <li><a href="{{ url_for('tickets') }}">Tickets</a></li>
+                <li><a href="{{ url_for('suporte') }}">Suporte</a></li>
+                
+                {% if usuario_nome %}
+                    <li><a href="{{ url_for('painel') }}" class="btn btn-primary">Painel ({{ usuario_nome.split(' ')[0] }})</a></li>
+                    <li><a href="{{ url_for('logout') }}" class="btn btn-secondary">Sair</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('login') }}" class="btn btn-secondary">Login</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="widget-container" style="background: rgba(17, 17, 17, 0.8); backdrop-filter: blur(2px); border: 1px solid rgba(218, 165, 32, 0.2); border-radius: 5px; padding: 30px;">
+            <h2>Política de Privacidade - ZeroDay</h2>
+            <p style="color: #aaa; margin-top: 10px;">Última atualização: 15 de novembro de 2025</p>
+            <p style="margin-top: 20px;">A sua privacidade é fundamental para a ZeroDay. Esta política explica como coletamos, usamos e protegemos suas informações pessoais.</p>
+            
+            <h3 style="margin-top: 20px;">1. Dados que Coletamos</h3>
+            <p>Coletamos os seguintes dados quando você usa nosso site:<br>
+               a. Informações de Cadastro: Nome, endereço de e-mail e senha (armazenada em formato "hash" seguro).<br>
+               b. Informações do Perfil: Seu nome de usuário do Discord (opcional, solicitado durante o pedido).<br>
+               c. Informações de Pedido: As descrições, detalhes e arquivos (anexos) que você envia através do nosso formulário de personalização.<br>
+               d. Dados de Pagamento: Não armazenamos seus dados bancários. As transações PIX são processadas por instituições financeiras externas.</p>
+
+            <h3 style="margin-top: 20px;">2. Como Usamos seus Dados</h3>
+            <p>Usamos suas informações exclusivamente para:<br>
+               a. Processar e gerenciar seus pedidos.<br>
+               b. Criar e administrar sua conta de cliente.<br>
+               c. Fornecer suporte técnico e atendimento.<br>
+               d. Comunicar atualizações importantes sobre seus pedidos.<br>
+               e. Cumprir obrigações legais.</p>
+
+            <h3 style="margin-top: 20px;">3. Armazenamento e Segurança</h3>
+            <p>a. Seus dados são armazenados em servidores seguros (Fly.io) e protegidos por medidas técnicas para prevenir acesso não autorizado.<br>
+               b. Sua senha é "hasheada", o que significa que nem mesmo nossa equipe de administração pode vê-la.<br>
+               c. O acesso aos dados de pedidos é restrito à nossa equipe de administração para garantir a produção e entrega do seu serviço.</p>
+            
+            <h3 style="margin-top: 20px;">4. Compartilhamento de Dados</h3>
+            <p>NÃO vendemos, alugamos ou compartilhamos suas informações pessoais com terceiros para fins de marketing. Seus dados só serão compartilhados se formos obrigados por lei.</p>
+
+            <h3 style="margin-top: 20px;">5. Seus Direitos (LGPD)</h3>
+            <p>Você tem o direito de:<br>
+               a. Acessar os dados que temos sobre você (disponível em seu "Painel do Cliente").<br>
+               b. Corrigir informações incorretas.<br>
+               c. Solicitar a exclusão de sua conta e dados pessoais (sujeito a obrigações legais de retenção de dados de pedidos).</p>
+
+            <h3 style="margin-top: 20px;">6. Modificações na Política</h3>
+            <p>Podemos atualizar esta política de privacidade. Notificaremos sobre mudanças significativas publicando a nova política nesta página.</p>
+
+            <h3 style="margin-top: 20px;">7. Contato</h3>
+            <p>Para dúvidas sobre esta política, entre em contato através do nosso servidor oficial no Discord (disponível na página "Suporte").</p>
+        </div>
+    </main>
+
+    <footer class="main-footer">
+    <div class="footer-container">
+        
+        <div class="footer-col col-left">
+            <div class="logo" style="font-size: 1.5rem; margin-bottom: 15px; color: #fff;">
+                <img src="{{ url_for('static', filename='images/logo-icon.png') }}" alt="" style="height: 25px; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">
+                ZeroDay
+            </div>
+            <p style="color: #888; font-family: 'Roboto Mono'; font-size: 0.85rem; line-height: 1.6; max-width: 300px;">
+                Soluções digitais de alta performance.<br>
+                Precisão cirúrgica para o seu negócio.
+            </p>
+        </div>
+
+        <div class="footer-col col-center">
+            <h4>Navegação</h4>
+            <ul>
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('produtos') }}">Produtos</a></li>
+                <li><a href="{{ url_for('catalogo') }}">Catálogo</a></li>
+                <li><a href="{{ url_for('tickets') }}">Tickets</a></li>
+                <li><a href="{{ url_for('suporte') }}">Suporte</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-col col-right">
+            <h4>Suporte & Legal</h4>
+            <ul>
+                <li><a href="{{ url_for('tickets') }}">Central de Ajuda</a></li>
+                <li><a href="{{ url_for('termos') }}">Termos de Serviço</a></li>
+                <li><a href="{{ url_for('privacidade') }}">Política de Privacidade</a></li>
+                <li><a href="{{ url_for('admin_login') }}" style="opacity: 0.5;">Acesso Admin</a></li>
+            </ul>
+        </div>
+
+    </div>
+
+    <div class="copyright">
+        &copy; 2025 ZeroDay. Todos os direitos reservados.
+    </div>
+</footer>
+    
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <script src="{{ url_for('static', filename='three-bg.js') }}"></script>
+</body>
+</html>
