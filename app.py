@@ -41,13 +41,18 @@ app = Flask(__name__, static_folder="assets", template_folder=".")
 app.secret_key = FLASK_SECRET_KEY
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
-if IS_PRODUCTION:
+if RAILWAY_ENVIRONMENT:
+    DATABASE_PATH = "/tmp/zeroday_data"
+elif FLY_ENVIRONMENT:
     DATABASE_PATH = "/data"
 else:
     DATABASE_PATH = "data"
 
 DATABASE = os.path.join(DATABASE_PATH, "zeroday.db")
 UPLOAD_FOLDER = os.path.join(DATABASE_PATH, "uploads")
+
+os.makedirs(DATABASE_PATH, exist_ok=True)
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "zip", "rar", "txt", "pdf"}
 
 AUTHORIZATION_BASE_URL = "https://discord.com/api/oauth2/authorize"
