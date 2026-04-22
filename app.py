@@ -50,10 +50,10 @@ else:
 
 DATABASE = os.path.join(DATABASE_PATH, "zeroday.db")
 UPLOAD_FOLDER = os.path.join(DATABASE_PATH, "uploads")
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "zip", "rar", "txt", "pdf"}
 
 os.makedirs(DATABASE_PATH, exist_ok=True)
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "zip", "rar", "txt", "pdf"}
 
 AUTHORIZATION_BASE_URL = "https://discord.com/api/oauth2/authorize"
 TOKEN_URL = "https://discord.com/api/oauth2/token"
@@ -67,6 +67,7 @@ SCOPES = ["identify", "email", "guilds"]
 def get_db():
     db = getattr(g, "_database", None)
     if db is None:
+        os.makedirs(DATABASE_PATH, exist_ok=True)
         db = g._database = sqlite3.connect(DATABASE)
         db.row_factory = sqlite3.Row
     return db
@@ -178,7 +179,6 @@ def setup_database():
                 )
             """)
 
-            # Migrações
             try:
                 cursor.execute("ALTER TABLE usuarios ADD COLUMN status TEXT NOT NULL DEFAULT 'Ativo'")
             except Exception:
@@ -456,7 +456,6 @@ def login():
     if "usuario_id" in session:
         return redirect(url_for("painel"))
 
-    # Login clássico por formulário
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
         senha = request.form.get("senha", "")
@@ -477,7 +476,6 @@ def login():
         flash("Email ou senha incorretos.", "error")
         return redirect(url_for("login"))
 
-    # Link Discord OAuth
     discord_url = "#"
     if DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET:
         try:
