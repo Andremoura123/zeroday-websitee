@@ -52,13 +52,13 @@ DATABASE = os.path.join(DATABASE_PATH, "zeroday.db")
 UPLOAD_FOLDER = os.path.join(DATABASE_PATH, "uploads")
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "zip", "rar", "txt", "pdf"}
 
-os.makedirs(DATABASE_PATH, exist_ok=True)
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
 AUTHORIZATION_BASE_URL = "https://discord.com/api/oauth2/authorize"
 TOKEN_URL = "https://discord.com/api/oauth2/token"
 API_BASE_URL = "https://discord.com/api/users/@me"
 SCOPES = ["identify", "email", "guilds"]
+
+os.makedirs(DATABASE_PATH, exist_ok=True)
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # ==============================================================================
 # 2. FUNÇÕES AUXILIARES
@@ -228,6 +228,111 @@ def setup_database():
         print(f"Erro no setup: {e}")
 
 
+def ensure_database_ready():
+    try:
+        os.makedirs(DATABASE_PATH, exist_ok=True)
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+        db = sqlite3.connect(DATABASE)
+        cursor = db.cursor()
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS administradores (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nome TEXT NOT NULL,
+                email TEXT UNIQUE NOT NULL,
+                senha_hash TEXT NOT NULL,
+                permissao TEXT NOT NULL
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS usuarios (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nome TEXT NOT NULL,
+                email TEXT UNIQUE NOT NULL,
+                discord_user TEXT,
+                senha_hash TEXT,
+                discord_id TEXT,
+                avatar_hash TEXT,
+                status TEXT DEFAULT 'Ativo',
+                data_cadastro TEXT
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS pedidos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                usuario_id INTEGER NOT NULL,
+                produto_nome TEXT NOT NULL,
+                descricao TEXT NOT NULL,
+                anexos_path TEXT,
+                status_pedido TEXT NOT NULL,
+                status_pagamento TEXT NOT NULL,
+                data_pedido TEXT NOT NULL,
+                FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS catalogo_itens (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                categoria TEXT NOT NULL,
+                nome TEXT NOT NULL,
+                descricao TEXT NOT NULL,
+                icone TEXT
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS tickets (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                usuario_id INTEGER,
+                categoria TEXT,
+                assunto TEXT,
+                descricao TEXT,
+                prioridade TEXT,
+                status TEXT,
+                data_criacao TEXT
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS ticket_mensagens (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ticket_id INTEGER,
+                remetente_tipo TEXT,
+                remetente_nome TEXT,
+                mensagem TEXT,
+                data_envio TEXT
+            )
+        """)
+
+        senha_admin = "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3"  # admin123
+        email_admin = "admin@zeroday.com"
+
+        cursor.execute(
+            "UPDATE administradores SET senha_hash = ? WHERE email = ?",
+            (senha_admin, email_admin)
+        )
+
+        if cursor.rowcount == 0:
+            cursor.execute(
+                "INSERT INTO administradores (nome, email, senha_hash, permissao) VALUES (?, ?, ?, ?)",
+                ("Admin Default", email_admin, senha_admin, "Super Admin")
+            )
+
+        db.commit()
+        db.close()
+    except Exception as e:
+        print(f"Erro ao garantir banco: {e}")
+
+
+@app.before_request
+def init_db_before_request():
+    ensure_database_ready()
+
+
 # ==============================================================================
 # 4. FRONTEND
 # ==============================================================================
@@ -274,7 +379,7 @@ def catalogo():
 
 @app.route("/formulario/<produto>")
 def formulario(produto):
-    if "usuario_id" not in session:
+    if not session.get("is_admin") and "usuario_id" not in session:
         flash("Você precisa estar logado para fazer um pedido.", "error")
         return redirect(url_for("login"))
 
@@ -297,7 +402,7 @@ def privacidade():
 
 @app.route("/pagamento")
 def pagamento():
-    if "usuario_id" not in session:
+    if not session.get("is_admin") and "usuario_id" not in session:
         return redirect(url_for("login"))
     return render_template("pagamento.html", usuario_nome=get_current_user_name())
 
@@ -465,7 +570,6 @@ def login():
 
         db = get_db()
 
-        # tenta login como admin primeiro
         admin_user = db.execute(
             "SELECT * FROM administradores WHERE lower(email) = ?",
             (email,)
@@ -479,7 +583,6 @@ def login():
             flash("Login administrativo realizado com sucesso.", "success")
             return redirect(url_for("admin_dashboard"))
 
-        # se não for admin, tenta usuário normal
         usuario = db.execute(
             "SELECT * FROM usuarios WHERE lower(email) = ?",
             (email,)
@@ -634,7 +737,8 @@ def cadastro():
         db.commit()
         flash("Cadastro realizado com sucesso. Agora faça login.", "success")
         return redirect(url_for("login"))
-    except Exception:
+    except Exception as e:
+        print(f"Erro ao cadastrar usuário: {e}")
         flash("Erro ao cadastrar usuário.", "error")
         return redirect(url_for("cadastro"))
 
@@ -687,13 +791,13 @@ def logout():
 
 @app.route("/solicitar_pedido", methods=["POST"])
 def solicitar_pedido():
-    if "usuario_id" not in session:
+    if not session.get("is_admin") and "usuario_id" not in session:
         return redirect(url_for("login"))
 
     produto = request.form.get("produto", "").strip()
     descricao = request.form.get("descricao", "").strip()
     anexos = request.files.getlist("anexos")
-    usuario_id = session["usuario_id"]
+    usuario_id = session.get("usuario_id")
 
     if not produto or not descricao:
         flash("Preencha produto e descrição.", "error")
@@ -721,7 +825,7 @@ def solicitar_pedido():
         VALUES (?, ?, ?, ?, ?, ?, ?)
         """,
         (
-            usuario_id,
+            usuario_id if usuario_id else 0,
             produto,
             descricao,
             anexos_path,
@@ -765,7 +869,7 @@ def download_anexo(pedido_path, filename):
 def admin_required(f):
     def wrapper(*args, **kwargs):
         if not session.get("is_admin"):
-            return redirect(url_for("admin_login"))
+            return redirect(url_for("login"))
         return f(*args, **kwargs)
     wrapper.__name__ = f.__name__
     return wrapper
@@ -773,30 +877,12 @@ def admin_required(f):
 
 @app.route("/gerenciamento")
 def admin_login():
-    if session.get("is_admin"):
-        return redirect(url_for("admin_dashboard"))
-    return render_template("admin_login.html")
+    return redirect(url_for("login"))
 
 
 @app.route("/admin_login_post", methods=["POST"])
 def admin_login_post():
-    email = request.form.get("email", "").strip().lower()
-    senha = request.form.get("senha", "")
-
-    db = get_db()
-    admin_user = db.execute(
-        "SELECT * FROM administradores WHERE lower(email) = ?",
-        (email,)
-    ).fetchone()
-
-    if admin_user and hash_password(senha) == admin_user["senha_hash"]:
-        session["admin_id"] = admin_user["id"]
-        session["usuario_nome"] = admin_user["nome"]
-        session["is_admin"] = True
-        return redirect(url_for("admin_dashboard"))
-
-    flash("Credenciais inválidas.", "error")
-    return redirect(url_for("admin_login"))
+    return redirect(url_for("login"))
 
 
 @app.route("/admin/dashboard")
@@ -843,7 +929,7 @@ def admin_pedidos():
     pedidos = db.execute("""
         SELECT p.*, u.nome AS usuario_nome, u.email AS usuario_email
         FROM pedidos p
-        JOIN usuarios u ON p.usuario_id = u.id
+        LEFT JOIN usuarios u ON p.usuario_id = u.id
         ORDER BY p.data_pedido DESC
     """).fetchall()
 
@@ -873,7 +959,7 @@ def admin_tickets():
     tickets = db.execute("""
         SELECT t.*, u.nome as usuario_nome, u.email as usuario_email
         FROM tickets t
-        JOIN usuarios u ON t.usuario_id = u.id
+        LEFT JOIN usuarios u ON t.usuario_id = u.id
         ORDER BY t.data_criacao DESC
     """).fetchall()
 
@@ -1004,7 +1090,7 @@ def admin_configuracoes():
 @app.route("/admin_logout")
 def admin_logout():
     session.clear()
-    return redirect(url_for("admin_login"))
+    return redirect(url_for("login"))
 
 
 # ==============================================================================
