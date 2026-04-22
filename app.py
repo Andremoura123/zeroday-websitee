@@ -479,7 +479,7 @@ def login():
             flash("Login administrativo realizado com sucesso.", "success")
             return redirect(url_for("admin_dashboard"))
 
-        # se não for admin, tenta login de usuário normal
+        # se não for admin, tenta usuário normal
         usuario = db.execute(
             "SELECT * FROM usuarios WHERE lower(email) = ?",
             (email,)
