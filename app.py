@@ -935,6 +935,11 @@ def add_header(response):
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     return response
 
+@app.errorhandler(Exception)
+def handle_all_errors(e):
+    import traceback
+    return f"<pre>{traceback.format_exc()}</pre>", 500
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "setup":
